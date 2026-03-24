@@ -1,0 +1,21 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+
+@theme static {
+  --font-sans: 'Geist', sans-serif;
+
+  --color-brand-50: oklch(96.21% 0.02 248.01);
+  --color-brand-100: oklch(92.52% 0.04 243.48);
+  --color-brand-200: oklch(84.65% 0.09 239.13);
+  --color-brand-300: oklch(73.53% 0.15 241.81);
+  --color-brand-400: oklch(60.57% 0.16 246.68);
+  --color-brand-500: oklch(45.44% 0.12 246.70);
+  --color-brand-600: oklch(39.27% 0.11 250.45);
+  --color-brand-700: oklch(33.95% 0.10 250.09);
+  --color-brand-800: oklch(31.40% 0.09 248.40);
+  --color-brand-900: oklch(26.69% 0.07 249.10);
+  --color-brand-950: oklch(20.80% 0.05 248.04);
+
+
+}
