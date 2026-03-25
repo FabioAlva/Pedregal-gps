@@ -1,10 +1,9 @@
-import { requireBackendPermission } from '~~/server/utils/permissions'
+import { requireBackendPermission } from '~~/server/utils/betterauth-permissions'
 
 const PUBLIC_API_PREFIXES = [
   '/api/auth',
   '/api/_nuxt_icon',
   '/api/module-routes',
-  '/api/section-routes'
 ]
 
 function isApiPath(path: string): boolean {
@@ -12,12 +11,15 @@ function isApiPath(path: string): boolean {
 }
 
 function isPublicApi(path: string): boolean {
-  return PUBLIC_API_PREFIXES.some(prefix => path === prefix || path.startsWith(`${prefix}/`))
+   const pathOnly = path.split('?')[0] ?? ''
+  return PUBLIC_API_PREFIXES.some(prefix => 
+    pathOnly === prefix || pathOnly.startsWith(`${prefix}/`)
+  )
 }
 
 export default defineEventHandler(async (event) => {
-  const path = String(event.path || '')
-  const method = String(event.method || 'GET').toUpperCase()
+  const path = event.path || ''
+  const method = event.method.toUpperCase()
 
   if (!isApiPath(path)) return
   if (method === 'OPTIONS') return

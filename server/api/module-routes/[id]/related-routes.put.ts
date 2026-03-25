@@ -1,75 +1,28 @@
-import { and, eq, inArray } from 'drizzle-orm'
+// server/api/module-routes/[id]/related-routes.put.ts
 import { db } from '@nuxthub/db'
-import { frontendBackendRouteLinks, moduleRoutes } from '~~/server/db/schema'
+import { ModuleRouteService } from '~~/server/services/ModuleRoute/ModuleRoute.service'
 
-interface ReplaceRelatedRoutesBody {
-  relatedRouteIds?: number[]
-}
+const service = new ModuleRouteService(db)
 
 export default defineEventHandler(async (event) => {
   const routeId = Number(getRouterParam(event, 'id'))
-  const body = await readBody<ReplaceRelatedRoutesBody>(event)
+  const body = await readBody<{ relatedRouteIds?: number[] }>(event)
 
-  if (!routeId) {
-    throw createError({ statusCode: 400, statusMessage: 'id invalido' })
+  if (!routeId || isNaN(routeId)) {
+    throw createError({ statusCode: 400, statusMessage: 'ID inválido' })
   }
 
-  const selectedRoute = await db.query.moduleRoutes.findFirst({
-    where: eq(moduleRoutes.id, routeId)
-  })
+  // Normalización básica de IDs
+  const uniqueIds = Array.from(new Set((body.relatedRouteIds ?? []).map(Number).filter(id => id > 0)))
 
-  if (!selectedRoute) {
-    throw createError({ statusCode: 404, statusMessage: 'Ruta no encontrada' })
-  }
-
-  const uniqueRelatedIds = Array.from(
-    new Set((body.relatedRouteIds ?? []).map(id => Number(id)).filter(id => Number.isInteger(id) && id > 0))
-  )
-
-  if (uniqueRelatedIds.length > 0) {
-    const expectedType = selectedRoute.tipoRuta === 'backend' ? 'frontend' : 'backend'
-
-    const existingRoutes = await db.query.moduleRoutes.findMany({
-      where: and(
-        inArray(moduleRoutes.id, uniqueRelatedIds),
-        eq(moduleRoutes.tipoRuta, expectedType),
-        eq(moduleRoutes.protegida, true)
-      )
+  try {
+    // El servicio decide qué borrar y qué insertar según el tipo de la ruta original
+    await service.updateRelatedRoutes(routeId, uniqueIds)
+    return { success: true }
+  } catch (error: any) {
+    throw createError({
+      statusCode: error.statusCode || 500,
+      statusMessage: error.statusMessage || 'Error al actualizar rutas relacionadas'
     })
-
-    if (existingRoutes.length !== uniqueRelatedIds.length) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Una o mas rutas relacionadas no existen, no son del tipo esperado o no son protegidas'
-      })
-    }
   }
-
-  if (selectedRoute.tipoRuta === 'backend') {
-    await db.delete(frontendBackendRouteLinks)
-      .where(eq(frontendBackendRouteLinks.backendRouteId, routeId))
-
-    if (uniqueRelatedIds.length > 0) {
-      await db.insert(frontendBackendRouteLinks).values(
-        uniqueRelatedIds.map(frontendRouteId => ({
-          frontendRouteId,
-          backendRouteId: routeId
-        }))
-      )
-    }
-  } else {
-    await db.delete(frontendBackendRouteLinks)
-      .where(eq(frontendBackendRouteLinks.frontendRouteId, routeId))
-
-    if (uniqueRelatedIds.length > 0) {
-      await db.insert(frontendBackendRouteLinks).values(
-        uniqueRelatedIds.map(backendRouteId => ({
-          frontendRouteId: routeId,
-          backendRouteId
-        }))
-      )
-    }
-  }
-
-  return { success: true }
 })

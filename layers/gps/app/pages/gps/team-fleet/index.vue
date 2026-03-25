@@ -6,7 +6,7 @@ import { UseTeemFleet } from '../../../composables/useTeamFeet'
 import useFilter from '../../../composables/useFilter'
 import { useFilterStore } from '../../../stores/useFilterStore'
 import { parseLocalDateStr } from '../../../utils/FormatTime'
-import { resolveRouteByPath, type FrontPermissionPayload } from '~/lib/route-permissions'
+import { resolveRouteByPath, type FrontPermissionPayload } from '~/utils/route-permissions'
 
 const {
   listGps, isloadingGps, fetchGps, listFleets, saveAssignment, availableGps,

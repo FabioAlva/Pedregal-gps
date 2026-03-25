@@ -1,38 +1,42 @@
 import { NeonUserRepository } from '~~/server/Repository/NeonUserRepository'
-import { NeonUserRoleRepository } from '~~/server/Repository/NeonUserRoleRepository'
 import type { DbClient } from '~~/shared/types/db'
 
 export class UserService {
-  private userRepo: NeonUserRepository
-  private userRoleRepo: NeonUserRoleRepository
+  private repo: NeonUserRepository
 
   constructor(db: DbClient) {
-    this.userRepo = new NeonUserRepository(db)
-    this.userRoleRepo = new NeonUserRoleRepository(db)
+    this.repo = new NeonUserRepository(db)
   }
 
-  async getAll() {
-    return await this.userRepo.findAll()
-  }
+  async getAll() { return await this.repo.findAll() }
 
   async getById(id: string) {
-    const user = await this.userRepo.findById(id)
-    if (!user) throw new Error(`Usuario con id ${id} no encontrado`)
+    const user = await this.repo.findById(id)
+    if (!user) throw createError({ statusCode: 404, message: 'Usuario no encontrado' })
     return user
   }
 
+async updateProfile(id: string, name?: string, email?: string) {
+  const cleanName = String(name ?? '').trim()
+  const cleanEmail = String(email ?? '').trim().toLowerCase()
+
+  if (!cleanName || !cleanEmail) {
+    throw createError({ statusCode: 400, statusMessage: 'Nombre y email son requeridos' })
+  }
+
+  await this.getById(id) 
+  return await this.repo.update(id, { name: cleanName, email: cleanEmail })
+}
+
+  // Gestión de Roles del Usuario
   async getUserRoles(userId: string) {
-    await this.getById(userId)
-    return await this.userRoleRepo.findByUserId(userId)
+    return await this.repo.findUserRoles(userId)
   }
 
-  async update(userId: string, data: { name: string; email: string }) {
-    await this.getById(userId)
-    await this.userRepo.update(userId, data)
-  }
 
-  async replaceUserRoles(userId: string, roleIds: number[]) {
+  
+  async assignRoles(userId: string, roleIds: number[]) {
     await this.getById(userId)
-    await this.userRoleRepo.replaceByUser(userId, roleIds)
+    return await this.repo.setUserRoles(userId, roleIds)
   }
 }

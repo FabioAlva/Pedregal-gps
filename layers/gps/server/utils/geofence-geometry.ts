@@ -6,7 +6,7 @@ const toRadians = (value: number) => (value * Math.PI) / 180
 /**
  * Distancia Haversine en metros entre dos coordenadas.
  */
-const distanceMeters = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+export const distanceMeters = (lat1: number, lon1: number, lat2: number, lon2: number) => {
   const earthRadius = 6371000
   const dLat = toRadians(lat2 - lat1)
   const dLon = toRadians(lon2 - lon1)

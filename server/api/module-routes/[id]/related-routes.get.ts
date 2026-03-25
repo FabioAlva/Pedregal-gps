@@ -1,41 +1,23 @@
-import { and, eq } from 'drizzle-orm'
+// server/api/module-routes/[id]/related-routes.get.ts
 import { db } from '@nuxthub/db'
-import { frontendBackendRouteLinks, moduleRoutes } from '~~/server/db/schema'
+import { ModuleRouteService } from '~~/server/services/ModuleRoute/ModuleRoute.service'
+
+const service = new ModuleRouteService(db)
 
 export default defineEventHandler(async (event) => {
   const routeId = Number(getRouterParam(event, 'id'))
 
-  if (!routeId) {
-    throw createError({ statusCode: 400, statusMessage: 'id invalido' })
+  if (!routeId || isNaN(routeId)) {
+    throw createError({ statusCode: 400, statusMessage: 'ID inválido' })
   }
 
-  const selectedRoute = await db.query.moduleRoutes.findFirst({
-    where: eq(moduleRoutes.id, routeId)
-  })
-
-  if (!selectedRoute) {
-    throw createError({ statusCode: 404, statusMessage: 'Ruta no encontrada' })
-  }
-
-  if (selectedRoute.tipoRuta === 'backend') {
-    const rows = await db
-      .select({ relatedRouteId: frontendBackendRouteLinks.frontendRouteId })
-      .from(frontendBackendRouteLinks)
-      .where(eq(frontendBackendRouteLinks.backendRouteId, routeId))
-
-    return {
-      selectedRouteType: 'backend' as const,
-      relatedRouteIds: Array.from(new Set(rows.map(row => row.relatedRouteId)))
-    }
-  }
-
-  const rows = await db
-    .select({ relatedRouteId: frontendBackendRouteLinks.backendRouteId })
-    .from(frontendBackendRouteLinks)
-    .where(eq(frontendBackendRouteLinks.frontendRouteId, routeId))
-
-  return {
-    selectedRouteType: 'frontend' as const,
-    relatedRouteIds: Array.from(new Set(rows.map(row => row.relatedRouteId)))
+  try {
+    // El servicio ahora se encarga de identificar el tipo y buscar las relaciones
+    return await service.getRelatedRoutes(routeId)
+  } catch (error: any) {
+    throw createError({
+      statusCode: error.statusCode || 500,
+      statusMessage: error.statusMessage || 'Error al obtener rutas relacionadas'
+    })
   }
 })

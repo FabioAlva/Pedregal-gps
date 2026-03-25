@@ -5,13 +5,9 @@ import { resolveBestAuthorizedFrontendRoute } from '~/lib/post-login-route'
 const { data: session } = await authClient.useSession(useFetch);
 
 if (session.value) {
-	const targetRoute = await resolveBestAuthorizedFrontendRoute()
-	if (targetRoute) {
-		await navigateTo(targetRoute, { replace: true })
-	} else {
-		await navigateTo('/login', { replace: true })
-	}
+	// Después del login, vamos al dashboard principal
+	await navigateTo('/dashboard', { replace: true })
 } else {
-	await navigateTo("/login", { replace: true });
+	await navigateTo('/login', { replace: true });
 }
 </script>

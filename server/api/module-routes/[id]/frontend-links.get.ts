@@ -1,28 +1,27 @@
-import { and, eq } from 'drizzle-orm'
+// server/api/module-routes/[id]/frontend-links.get.ts
 import { db } from '@nuxthub/db'
-import { frontendBackendRouteLinks, moduleRoutes } from '~~/server/db/schema'
+import { ModuleRouteService } from '~~/server/services/ModuleRoute/ModuleRoute.service'
+
+const service = new ModuleRouteService(db)
 
 export default defineEventHandler(async (event) => {
-  const backendRouteId = Number(getRouterParam(event, 'id'))
+  const backendId = Number(getRouterParam(event, 'id'))
 
-  if (!backendRouteId) {
-    throw createError({ statusCode: 400, statusMessage: 'id invalido' })
+  if (!backendId || isNaN(backendId)) {
+    throw createError({ statusCode: 400, statusMessage: 'ID de ruta backend inválido' })
   }
 
-  const backendRoute = await db.query.moduleRoutes.findFirst({
-    where: and(eq(moduleRoutes.id, backendRouteId), eq(moduleRoutes.tipoRuta, 'backend'))
-  })
+  try {
+    // 1. Validamos que exista (dentro del service) y obtenemos los IDs vinculados
+    const frontendRouteIds = await service.getLinkedFrontendIds(backendId)
 
-  if (!backendRoute) {
-    throw createError({ statusCode: 404, statusMessage: 'Ruta backend no encontrada' })
-  }
-
-  const rows = await db
-    .select({ frontendRouteId: frontendBackendRouteLinks.frontendRouteId })
-    .from(frontendBackendRouteLinks)
-    .where(eq(frontendBackendRouteLinks.backendRouteId, backendRouteId))
-
-  return {
-    frontendRouteIds: Array.from(new Set(rows.map(row => row.frontendRouteId)))
+    return {
+      frontendRouteIds
+    }
+  } catch (error: any) {
+    throw createError({
+      statusCode: error.statusCode || 500,
+      statusMessage: error.statusMessage || 'Error al obtener enlaces de rutas'
+    })
   }
 })

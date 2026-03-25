@@ -1,4 +1,4 @@
-import type { FrontPermissionPayload } from '~/lib/route-permissions'
+import type { FrontPermissionPayload } from '~/utils/route-permissions'
 
 type FrontModuleRouteRow = {
   id: number

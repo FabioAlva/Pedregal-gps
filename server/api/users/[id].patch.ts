@@ -1,24 +1,27 @@
+// server/api/users/[id].patch.ts
 import { db } from '@nuxthub/db'
 import { UserService } from '~~/server/services/User/User.service'
 
-interface UpdateUserBody {
-  name?: string
-  email?: string
-}
+const service = new UserService(db)
 
 export default defineEventHandler(async (event) => {
   const userId = String(getRouterParam(event, 'id'))
-  const body = await readBody<UpdateUserBody>(event)
+  const body = await readBody(event)
 
-  const name = String(body.name ?? '').trim()
-  const email = String(body.email ?? '').trim().toLowerCase()
-
-  if (!userId || !name || !email) {
-    throw createError({ statusCode: 400, statusMessage: 'id, name y email son requeridos' })
+  if (!userId) {
+    throw createError({ statusCode: 400, statusMessage: 'ID de usuario requerido' })
   }
 
-  const service = new UserService(db)
-  await service.update(userId, { name, email })
+  try {
+    // 1. Delegamos la limpieza (trim, lowerCase) y validación al Service
+    // 2. CAMBIO: Usamos updateProfile (nombre real en tu UserService)
+    await service.updateProfile(userId, body.name, body.email)
 
-  return { success: true }
+    return { success: true }
+  } catch (error: any) {
+    throw createError({
+      statusCode: error.statusCode || 500,
+      statusMessage: error.message || 'Error al actualizar el perfil'
+    })
+  }
 })

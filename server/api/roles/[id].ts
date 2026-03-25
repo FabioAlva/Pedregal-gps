@@ -1,27 +1,38 @@
+// server/api/roles/[id].ts
 import { db } from '@nuxthub/db'
 import { RoleService } from '~~/server/services/Role/Role.service'
-import type { NewRole } from '~~/shared/types/db'
+
+const service = new RoleService(db)
 
 export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
-  const method = event.method
+  const method = event.method.toUpperCase()
 
-  const service = new RoleService(db)
-
-  if (method === 'GET') {
-    return await service.getById(id)
+  if (!id || isNaN(id)) {
+    throw createError({ statusCode: 400, statusMessage: 'ID de rol inválido' })
   }
 
-  if (method === 'PATCH') {
-    const body: Partial<NewRole> = await readBody(event)
-    await service.update(id, body)
-    return { success: true }
-  }
+  try {
+    switch (method) {
+      case 'GET':
+        return await service.getById(id)
 
-  if (method === 'DELETE') {
-    await service.delete(id)
-    return { success: true }
-  }
+      case 'PATCH':
+        const body = await readBody(event)
+        await service.update(id, body)
+        return { success: true }
 
-  throw createError({ statusCode: 405, statusMessage: 'Metodo no permitido' })
+      case 'DELETE':
+        await service.delete(id)
+        return { success: true }
+
+      default:
+        throw createError({ statusCode: 405, statusMessage: 'Método no permitido' })
+    }
+  } catch (error: any) {
+    throw createError({
+      statusCode: error.statusCode || 500,
+      statusMessage: error.message || 'Error interno en la gestión de roles'
+    })
+  }
 })

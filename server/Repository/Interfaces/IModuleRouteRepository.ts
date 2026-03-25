@@ -28,4 +28,11 @@ export interface IModuleRouteRepository {
   create(data: ModuleRouteInput): Promise<number>
   update(id: number, data: ModuleRouteInput): Promise<void>
   delete(id: number): Promise<void>
-}
+  
+  // Enlaces (Relaciones Backend-Frontend)
+  replaceFrontendLinks(backendId: number, frontendIds: number[]): Promise<void>;
+  getLinkedBackendIds(frontendId: number): Promise<number[]>; //
+  getLinkedFrontendIds(backendId: number): Promise<number[]>
+  findProtectedBackendRoutes(): Promise<ModuleRouteView[]> // Para el middleware
+  validateRoutesExist(ids: number[], expectedType: 'frontend' | 'backend'): Promise<void>;
+syncRelatedLinks(routeId: number, relatedIds: number[], isBackend: boolean): Promise<void>;}

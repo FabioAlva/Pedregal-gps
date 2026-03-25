@@ -1,59 +1,28 @@
-import { and, eq, inArray } from 'drizzle-orm'
+// server/api/module-routes/[id]/frontend-links.put.ts
 import { db } from '@nuxthub/db'
-import { frontendBackendRouteLinks, moduleRoutes } from '~~/server/db/schema'
+import { ModuleRouteService } from '~~/server/services/ModuleRoute/ModuleRoute.service'
 
-interface ReplaceFrontendLinksBody {
-  frontendRouteIds?: number[]
-}
+const service = new ModuleRouteService(db)
 
 export default defineEventHandler(async (event) => {
-  const backendRouteId = Number(getRouterParam(event, 'id'))
-  const body = await readBody<ReplaceFrontendLinksBody>(event)
+  const backendId = Number(getRouterParam(event, 'id'))
+  const body = await readBody<{ frontendRouteIds?: number[] }>(event)
 
-  if (!backendRouteId) {
-    throw createError({ statusCode: 400, statusMessage: 'id invalido' })
+  if (!backendId || isNaN(backendId)) {
+    throw createError({ statusCode: 400, statusMessage: 'ID de ruta backend inválido' })
   }
 
-  const backendRoute = await db.query.moduleRoutes.findFirst({
-    where: and(eq(moduleRoutes.id, backendRouteId), eq(moduleRoutes.tipoRuta, 'backend'))
-  })
+  // 1. Limpiamos IDs (Esto es lo único que el controlador "procesa")
+  const uniqueIds = Array.from(new Set((body.frontendRouteIds ?? []).map(Number).filter(id => id > 0)))
 
-  if (!backendRoute) {
-    throw createError({ statusCode: 404, statusMessage: 'Ruta backend no encontrada' })
-  }
-
-  const uniqueFrontendIds = Array.from(
-    new Set((body.frontendRouteIds ?? []).map(id => Number(id)).filter(id => Number.isInteger(id) && id > 0))
-  )
-
-  if (uniqueFrontendIds.length > 0) {
-    const existingFrontendRoutes = await db.query.moduleRoutes.findMany({
-      where: and(
-        inArray(moduleRoutes.id, uniqueFrontendIds),
-        eq(moduleRoutes.tipoRuta, 'frontend'),
-        eq(moduleRoutes.protegida, true)
-      )
+  try {
+    // 2. Usamos el método universal del Service
+    await service.updateRelatedRoutes(backendId, uniqueIds)
+    return { success: true }
+  } catch (error: any) {
+    throw createError({
+      statusCode: error.statusCode || 500,
+      statusMessage: error.statusMessage || 'Error al actualizar enlaces'
     })
-
-    if (existingFrontendRoutes.length !== uniqueFrontendIds.length) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Una o mas rutas frontend no existen o no son protegidas'
-      })
-    }
   }
-
-  await db.delete(frontendBackendRouteLinks)
-    .where(eq(frontendBackendRouteLinks.backendRouteId, backendRouteId))
-
-  if (uniqueFrontendIds.length > 0) {
-    await db.insert(frontendBackendRouteLinks).values(
-      uniqueFrontendIds.map(frontendRouteId => ({
-        frontendRouteId,
-        backendRouteId
-      }))
-    )
-  }
-
-  return { success: true }
 })

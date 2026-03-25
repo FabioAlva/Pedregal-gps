@@ -19,9 +19,15 @@ export default defineNitroPlugin(async (nitroApp) => {
     influxProvider.client = client
 
     nitroApp.hooks.hook('close', async () => {
-      await client.close()
+      try {
+        await client.close()
+      } catch (closeErr) {
+        console.error('Error cerrando conexión InfluxDB:', closeErr)
+      }
     })
   } catch (error) {
-    console.error(`InfluxDB Error: ${error}`)
+    console.error('[InfluxDB] Error al inicializar cliente:', error)
+    influxProvider.client = null
+    return
   }
 })

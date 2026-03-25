@@ -1,11 +1,10 @@
 import { authClient } from '~/lib/auth-client'
 
 export async function useAuthSession() {
+
   const toast = useToast()
   const isLoggingOut = ref(false)
-
   const { data: session, isPending, error } = await authClient.useSession(useFetch)
-
   const user = computed(() => session.value?.user ?? null)
   const isAuthenticated = computed(() => Boolean(session.value))
 
@@ -15,7 +14,7 @@ export async function useAuthSession() {
     isLoggingOut.value = true
     try {
       const result = await authClient.signOut()
-
+      
       if (result?.error) {
         toast.add({
           title: 'No se pudo cerrar sesion',
@@ -26,18 +25,21 @@ export async function useAuthSession() {
         return false
       }
 
-      toast.add({
+         toast.add({
         title: 'Sesion cerrada',
         description: 'Hasta luego.',
         color: 'success',
         icon: 'i-heroicons-check-circle'
       })
 
-      const permissionsState = useState('auth:my-permissions', () => null)
-      const permissionsUserIdState = useState<string | null>('auth:permissions-user-id', () => null)
-      permissionsState.value = null
-      permissionsUserIdState.value = null
+    const permissionsState = useState('auth:my-permissions', () => null)
+    const permissionsUserIdState = useState<string | null>('auth:permissions-user-id', () => null)
 
+    localStorage.removeItem('auth:my-permissions')
+    localStorage.removeItem('module-route-rules')
+    localStorage.removeItem('auth:my-permissions')
+    permissionsState.value = null
+    permissionsUserIdState.value = null
       await navigateTo('/login', { replace: true })
       return true
     } catch (err: any) {

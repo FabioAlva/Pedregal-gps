@@ -46,19 +46,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     // Pequeña pausa para que el usuario vea el mensaje de éxito
     await new Promise(resolve => setTimeout(resolve, 800))
 
-    const targetRoute = await resolveBestAuthorizedFrontendRoute()
-    if (!targetRoute) {
-      toast.add({
-        title: 'Sesion iniciada sin rutas disponibles',
-        description: 'Tu usuario no tiene permiso VER en ninguna pagina frontend. Pide a un administrador que te asigne accesos.',
-        color: 'warning',
-        icon: 'i-heroicons-exclamation-triangle'
-      })
-      await navigateTo('/login', { replace: true })
-      return
-    }
-
-    await navigateTo(targetRoute, { replace: true })
+    // Redirigir al dashboard de la aplicación después del login
+    await navigateTo('/dashboard', { replace: true })
   } catch (error: any) {
     console.error('Error de login:', error)
 

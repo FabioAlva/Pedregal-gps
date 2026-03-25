@@ -15,7 +15,6 @@ import type {
 } from '@nuxthub/db/schema'
 
 export type DbClient = typeof import('@nuxthub/db').db
-
 export type GpsAlertLog = typeof gpsAlertLogs.$inferSelect
 export type GpsAlert = typeof gpsAlerts.$inferSelect
 export type FleetEquipment = typeof fleetEquipment.$inferSelect

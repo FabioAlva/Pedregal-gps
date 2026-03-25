@@ -1,17 +1,24 @@
+// server/api/roles/[id]/route-permissions.put.ts
 import { db } from '@nuxthub/db'
 import { RoleService } from '~~/server/services/Role/Role.service'
-import type { RoleRoutePermissionInput } from '~~/server/Repository/Interfaces/IRolePermissionRepository'
 
-interface ReplaceRoleRoutePermissionsBody {
-  permissions: RoleRoutePermissionInput[]
-}
+const service = new RoleService(db)
 
 export default defineEventHandler(async (event) => {
   const roleId = Number(getRouterParam(event, 'id'))
-  const body = await readBody<ReplaceRoleRoutePermissionsBody>(event)
+  const body = await readBody<{ permissions?: any[] }>(event)
 
-  const service = new RoleService(db)
-  await service.replaceRoutePermissions(roleId, body.permissions ?? [])
+  if (!roleId || isNaN(roleId)) {
+    throw createError({ statusCode: 400, statusMessage: 'ID de rol inválido' })
+  }
 
-  return { success: true }
+  try {
+    await service.syncPermissions(roleId, body.permissions ?? [])
+    return { success: true }
+  } catch (error: any) {
+    throw createError({
+      statusCode: error.statusCode || 500,
+      statusMessage: error.message || 'Error al sincronizar permisos'
+    })
+  }
 })

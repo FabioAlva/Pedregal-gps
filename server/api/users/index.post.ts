@@ -1,37 +1,29 @@
+// server/api/users/index.post.ts
 import { auth } from '~~/server/lib/auth'
 
-interface CreateUserBody {
-  name?: string
-  email?: string
-  password?: string
-}
-
 export default defineEventHandler(async (event) => {
-  const body = await readBody<CreateUserBody>(event)
-
+  const body = await readBody(event)
   const name = String(body.name ?? '').trim()
   const email = String(body.email ?? '').trim().toLowerCase()
-  const password = String(body.password ?? '').trim()
+  const password = String(body.password ?? '')
 
   if (!name || !email || !password) {
-    throw createError({ statusCode: 400, statusMessage: 'name, email y password son requeridos' })
+    throw createError({ statusCode: 400, statusMessage: 'Todos los campos son obligatorios' })
   }
 
   if (password.length < 6) {
-    throw createError({ statusCode: 400, statusMessage: 'password debe tener al menos 6 caracteres' })
+    throw createError({ statusCode: 400, statusMessage: 'La contraseña debe tener al menos 6 caracteres' })
   }
 
   try {
+
     const result = await auth.api.signUpEmail({
-      body: {
-        name,
-        email,
-        password
-      },
-      headers: new Headers()
+      body: { name, email, password },
+      headers: event.headers 
     })
 
     setResponseStatus(event, 201)
+    
     return {
       id: result.user.id,
       email: result.user.email,
@@ -39,8 +31,8 @@ export default defineEventHandler(async (event) => {
     }
   } catch (error: any) {
     throw createError({
-      statusCode: 400,
-      statusMessage: error?.message ?? 'No se pudo crear el usuario'
+      statusCode: error.statusCode || 400,
+      statusMessage: error.message || 'Error al registrar el usuario'
     })
   }
 })

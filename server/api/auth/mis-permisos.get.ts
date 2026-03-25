@@ -1,4 +1,4 @@
-import { getMyPermissions } from '~~/server/utils/permissions'
+import { getMyPermissions } from '~~/server/utils/betterauth-permissions'
 
 export default defineEventHandler(async (event) => {
   console.info('[api/auth/mis-permisos] start', {

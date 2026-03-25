@@ -5,7 +5,7 @@ import type { RouteAnalysisByDevice, RouteAnalysisSegment } from '../../schemas/
 import type { MapDataWithStatsResponse } from '../../schemas/IMapDataWithStatsResponse.js'
 import { getInterval, getRouteInterval } from '../../utils/influx'
 import { getDeviceFilter } from '../../utils/influx-sql'
-
+import { distanceMeters } from '../../utils/geofence-geometry'
 /**
  * Obtiene la telemetría base (Rutas)
  */
