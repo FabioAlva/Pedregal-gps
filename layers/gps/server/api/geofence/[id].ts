@@ -1,6 +1,6 @@
 import { db } from '@nuxthub/db'
 import { GeofenceService } from '../../services/GeoFence/Geofence.service'
-import { cacheNames, invalidateFunctionCacheByPrefix } from '../../utils/cache-version'
+import { cacheNames, invalidateFunctionCacheByPrefix } from '~~/utils/cache-version'
 
 export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))

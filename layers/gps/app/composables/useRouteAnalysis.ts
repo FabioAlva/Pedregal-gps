@@ -3,8 +3,8 @@ import { storeToRefs } from 'pinia'
 import useFilter from './useFilter'
 import { useRouteAnalysisStore } from '../stores/useRouteAnalysisStore'
 import type { RouteAnalysisByDevice, RouteAnalysisSegment } from '../types/IRouteAnalysis'
-import { cacheMaxAgeFromPinia } from '../../server/utils/cache-max-age'
-import { buildDeviceRangeCacheKey, shouldUsePiniaCache } from './usePiniaCacheGuard'
+import { cacheMaxAgeFromPinia } from '~~/utils/cache-max-age'
+import { shouldUsePiniaCache, buildDeviceRangeCacheKey } from '~~/app/composables/usePiniaCacheGuard'
 
 const ROUTE_ANALYSIS_PINIA_TTL_MS = cacheMaxAgeFromPinia.mapRouteAnalysis * 1000
 

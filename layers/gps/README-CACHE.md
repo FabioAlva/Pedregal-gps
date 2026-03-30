@@ -58,11 +58,11 @@ Definidos en `cacheNames`:
 
 ### GET cacheados
 
-- `server/api/equipament/index.get.ts` -> `gps:equipment:list`, key `all`, TTL `equipmentList`.
+- `server/api/equipment/index.get.ts` -> `gps:equipment:list`, key `all`, TTL `equipmentList`.
 - `server/api/fleets/index.get.ts` -> `gps:fleets:basic`, key `all`, TTL `fleetsBasic`.
 - `server/api/fleets/available.get.ts` -> `gps:fleets:available`, key `fleetsAvailable(includePlate)`, TTL `fleetsAvailable`.
-- `server/api/equipamentFeet/index.get.ts` -> `gps:fleet-equipment:all`, key `all`, TTL `fleetAssignmentsAll`.
-- `server/api/equipamentFeet/active/index.get.ts` -> `gps:fleet-equipment:active`, key `all`, TTL `fleetAssignmentsActive`.
+- `server/api/equipmentFeet/index.get.ts` -> `gps:fleet-equipment:all`, key `all`, TTL `fleetAssignmentsAll`.
+- `server/api/equipmentFeet/active/index.get.ts` -> `gps:fleet-equipment:active`, key `all`, TTL `fleetAssignmentsActive`.
 - `server/api/geofence/index.get.ts` -> `gps:geofence:list`, key `all`, TTL `geofenceList`.
 - `server/api/gps-alert/index.get.ts` -> `gps:alerts:list`, key `all`, TTL `gpsAlerts`.
 - `server/api/gps-alert/[id].get.ts` -> `gps:alerts:list`, key `id`, TTL `gpsAlerts`.
@@ -82,18 +82,18 @@ Definidos en `cacheNames`:
 
 ## 6) Quienes invalidan (inhiben) cache
 
-- `server/api/equipament/index.post.ts`
+- `server/api/equipment/index.post.ts`
   - invalida `gps:equipment:list`.
 
-- `server/api/equipament/[id].put.ts`
+- `server/api/equipment/[id].put.ts`
   - invalida `gps:equipment:list`.
 
-- `server/api/equipamentFeet/index.post.ts`
+- `server/api/equipmentFeet/index.post.ts`
   - invalida `gps:fleets:available`.
   - invalida `gps:fleet-equipment:all`.
   - invalida `gps:fleet-equipment:active`.
 
-- `server/api/equipamentFeet/[id].patch.ts`
+- `server/api/equipmentFeet/[id].patch.ts`
   - invalida `gps:fleets:available`.
   - invalida `gps:fleet-equipment:all`.
   - invalida `gps:fleet-equipment:active`.

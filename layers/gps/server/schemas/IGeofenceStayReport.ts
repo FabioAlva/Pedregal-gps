@@ -1,4 +1,4 @@
-import type { AssignmentResult } from '../Repository/Interfaces/IEquipmentFleetRepository'
+import type { AssignmentResult } from '../../../fleet-management/server/Repository/Interfaces/IEquipmentFleetRepository'
 
 
 /**

@@ -2,8 +2,8 @@ import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import type { Geofence } from '~~/shared/types/db'
 import { useGeofenceStore } from '../stores/useGeofenceStore'
-import { cacheMaxAgeFromPinia } from '../../server/utils/cache-max-age'
-import { shouldUsePiniaCache } from './usePiniaCacheGuard'
+import { cacheMaxAgeFromPinia } from '~~/utils/cache-max-age'
+import { shouldUsePiniaCache } from '~~/app/composables/usePiniaCacheGuard'
 
 const GEOFENCE_PINIA_TTL_MS = cacheMaxAgeFromPinia.geofenceList * 1000
 

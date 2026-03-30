@@ -1,6 +1,6 @@
 import { db } from '@nuxthub/db'
 import { GpsAlertService } from '../../services/GpsAlert/GpsAlert.service'
-import { cacheNames, invalidateFunctionCacheByPrefix } from '../../utils/cache-version'
+import { cacheNames, invalidateFunctionCacheByPrefix } from '~~/utils/cache-version'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')

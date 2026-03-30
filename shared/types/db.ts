@@ -11,9 +11,12 @@ import type {
   geofenceStays,
   fleetEquipment,
   gpsAlerts,
-  gpsAlertLogs
+  gpsAlertLogs,
+  equipment
 } from '@nuxthub/db/schema'
 
+export type EquipmentFleet = typeof fleetEquipment.$inferSelect
+export type Equipment = typeof equipment.$inferSelect
 export type DbClient = typeof import('@nuxthub/db').db
 export type GpsAlertLog = typeof gpsAlertLogs.$inferSelect
 export type GpsAlert = typeof gpsAlerts.$inferSelect
@@ -25,13 +28,15 @@ export type Role = typeof roles.$inferSelect
 export type ModuleRoute = typeof moduleRoutes.$inferSelect
 export type RoleRoutePermission = typeof roleRoutePermissions.$inferSelect
 export type UserRole = typeof userRoles.$inferSelect
+export type Fleet = typeof fleet.$inferSelect
 
+export type NewFleetEquipment = typeof fleetEquipment.$inferInsert
 export type NewGpsAlertLog = typeof gpsAlertLogs.$inferInsert
 export type NewGpsAlert= typeof gpsAlerts.$inferInsert
 export type NewGeofenceStay = typeof geofenceStays.$inferInsert
 export type NewGeofence = typeof geofences.$inferInsert
 export type NewEquipmentStatus = typeof equipmentStatus.$inferInsert
-export type NewEquipmentType = typeof equipmentType.$inferInsert
+export type NewEquipment = typeof equipment.$inferInsert
 export type NewFleet = typeof fleet.$inferInsert
 export type NewUser = typeof user.$inferInsert
 export type NewRole = typeof roles.$inferInsert

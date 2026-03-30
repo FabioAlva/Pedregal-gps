@@ -1,7 +1,7 @@
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { useFilterStore } from '../stores/useFilterStore'
-import { UseTeemFleet } from './useTeamFeet'
+import { useTeamFleet } from '#layers/fleet-management/app/composable/useTeamFeet'
 import { getISODate } from '../utils/FormatTime'
 
 type InvalidFilterValidation = {
@@ -21,7 +21,7 @@ export type FilterValidationResult = InvalidFilterValidation | ValidFilterValida
 export default function useFilter() {
 
   const store = useFilterStore()
-  const { fetchFilterDevicesSource } = UseTeemFleet()
+  const { fetchFilterDevicesSource } = useTeamFleet()
   const { selectedDevice, startDate, endDate, listDevice } = storeToRefs(store)
   const isLoadingDevices = ref(false)
   
@@ -67,7 +67,7 @@ export default function useFilter() {
 
     isLoadingDevices.value = true
     try {
-      const formatted = await fetchFilterDevicesSource({ force })
+      const formatted = await fetchFilterDevicesSource()
 
       listDevice.value = [
         {

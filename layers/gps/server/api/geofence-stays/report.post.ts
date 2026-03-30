@@ -6,8 +6,8 @@ import {
   cacheNames,
   logCacheHitIfPresent,
   logCacheMiss
-} from '../../utils/cache-version'
-import { cacheMaxAge } from '../../utils/cache-max-age'
+} from '~~/utils/cache-version'
+import { cacheMaxAge } from '~~/utils/cache-max-age'
 
 type GeofenceStayReportBody = {
   start: string

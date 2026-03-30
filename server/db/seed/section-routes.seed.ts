@@ -37,15 +37,15 @@ const DEFAULT_RULES = [
   { nombre: 'API estadias por area', url: '/api/geofence-stays/report', tipoRuta: 'backend' as const, metodo: 'POST', accionRequerida: 'ver' as const, protegida: true },
 
   // Team fleet
-  { nombre: 'API GPS listar', url: '/api/equipament', tipoRuta: 'backend' as const, metodo: 'GET', accionRequerida: 'ver' as const, protegida: true },
-  { nombre: 'API GPS crear', url: '/api/equipament', tipoRuta: 'backend' as const, metodo: 'POST', accionRequerida: 'agregar' as const, protegida: true },
-  { nombre: 'API GPS actualizar estado', url: '/api/equipament/*', tipoRuta: 'backend' as const, metodo: 'PUT', accionRequerida: 'editar' as const, protegida: true },
+  { nombre: 'API GPS listar', url: '/api/equipment', tipoRuta: 'backend' as const, metodo: 'GET', accionRequerida: 'ver' as const, protegida: true },
+  { nombre: 'API GPS crear', url: '/api/equipment', tipoRuta: 'backend' as const, metodo: 'POST', accionRequerida: 'agregar' as const, protegida: true },
+  { nombre: 'API GPS actualizar estado', url: '/api/equipment/*', tipoRuta: 'backend' as const, metodo: 'PUT', accionRequerida: 'editar' as const, protegida: true },
   { nombre: 'API flotas disponibles', url: '/api/fleets/available', tipoRuta: 'backend' as const, metodo: 'GET', accionRequerida: 'ver' as const, protegida: true },
   { nombre: 'API flotas listar', url: '/api/fleets', tipoRuta: 'backend' as const, metodo: 'GET', accionRequerida: 'ver' as const, protegida: true },
-  { nombre: 'API asignaciones listar', url: '/api/equipamentFeet', tipoRuta: 'backend' as const, metodo: 'GET', accionRequerida: 'ver' as const, protegida: true },
-  { nombre: 'API asignaciones crear', url: '/api/equipamentFeet', tipoRuta: 'backend' as const, metodo: 'POST', accionRequerida: 'agregar' as const, protegida: true },
-  { nombre: 'API asignaciones activas', url: '/api/equipamentFeet/active', tipoRuta: 'backend' as const, metodo: 'GET', accionRequerida: 'ver' as const, protegida: true },
-  { nombre: 'API asignaciones editar', url: '/api/equipamentFeet/*', tipoRuta: 'backend' as const, metodo: 'PATCH', accionRequerida: 'editar' as const, protegida: true },
+  { nombre: 'API asignaciones listar', url: '/api/equipmentFeet', tipoRuta: 'backend' as const, metodo: 'GET', accionRequerida: 'ver' as const, protegida: true },
+  { nombre: 'API asignaciones crear', url: '/api/equipmentFeet', tipoRuta: 'backend' as const, metodo: 'POST', accionRequerida: 'agregar' as const, protegida: true },
+  { nombre: 'API asignaciones activas', url: '/api/equipmentFeet/active', tipoRuta: 'backend' as const, metodo: 'GET', accionRequerida: 'ver' as const, protegida: true },
+  { nombre: 'API asignaciones editar', url: '/api/equipmentFeet/*', tipoRuta: 'backend' as const, metodo: 'PATCH', accionRequerida: 'editar' as const, protegida: true },
 
   // Alertas
   { nombre: 'API alertas listar', url: '/api/gps-alert', tipoRuta: 'backend' as const, metodo: 'GET', accionRequerida: 'ver' as const, protegida: true },
@@ -93,14 +93,14 @@ const DEFAULT_FRONTEND_BACKEND_LINKS = [
   { frontendUrl: '/gps/area-stays', backendUrl: '/api/geofence-stays/report', backendMethod: 'POST' },
 
   // /gps/team-fleet
-  { frontendUrl: '/gps/team-fleet', backendUrl: '/api/equipament', backendMethod: 'GET' },
-  { frontendUrl: '/gps/team-fleet', backendUrl: '/api/equipament/*', backendMethod: 'PUT' },
+  { frontendUrl: '/gps/team-fleet', backendUrl: '/api/equipment', backendMethod: 'GET' },
+  { frontendUrl: '/gps/team-fleet', backendUrl: '/api/equipment/*', backendMethod: 'PUT' },
   { frontendUrl: '/gps/team-fleet', backendUrl: '/api/fleets', backendMethod: 'GET' },
   { frontendUrl: '/gps/team-fleet', backendUrl: '/api/fleets/available', backendMethod: 'GET' },
-  { frontendUrl: '/gps/team-fleet', backendUrl: '/api/equipamentFeet', backendMethod: 'GET' },
-  { frontendUrl: '/gps/team-fleet', backendUrl: '/api/equipamentFeet', backendMethod: 'POST' },
-  { frontendUrl: '/gps/team-fleet', backendUrl: '/api/equipamentFeet/active', backendMethod: 'GET' },
-  { frontendUrl: '/gps/team-fleet', backendUrl: '/api/equipamentFeet/*', backendMethod: 'PATCH' },
+  { frontendUrl: '/gps/team-fleet', backendUrl: '/api/equipmentFeet', backendMethod: 'GET' },
+  { frontendUrl: '/gps/team-fleet', backendUrl: '/api/equipmentFeet', backendMethod: 'POST' },
+  { frontendUrl: '/gps/team-fleet', backendUrl: '/api/equipmentFeet/active', backendMethod: 'GET' },
+  { frontendUrl: '/gps/team-fleet', backendUrl: '/api/equipmentFeet/*', backendMethod: 'PATCH' },
 
   // /gps/alert/config-alert
   { frontendUrl: '/gps/alert/config-alert', backendUrl: '/api/gps-alert', backendMethod: 'GET' },

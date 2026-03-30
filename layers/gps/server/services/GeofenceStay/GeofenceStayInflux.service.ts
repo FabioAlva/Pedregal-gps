@@ -1,4 +1,4 @@
-import { NeonFleetEquipmentRepository } from '../../Repository/NeonFleetEquipmentRepository'
+import { NeonFleetEquipmentRepository } from '../../../../fleet-management/server/Repository/NeonFleetEquipmentRepository'
 import { NeonGeofenceRepository } from '../../Repository/NeonGeofenceRepository'
 import { isInsideGeofence } from '../../utils/geofence-geometry'
 import { getDeviceFilter } from '../../utils/influx-sql'

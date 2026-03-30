@@ -1,7 +1,7 @@
 import type { NeonHttpDatabase } from 'drizzle-orm/neon-http/driver'
 import { and, eq } from 'drizzle-orm'
 import * as schema from '~~/server/db/schema'
-import { NeonFleetEquipmentRepository } from '#layers/gps/server/Repository/NeonFleetEquipmentRepository'
+import { NeonFleetEquipmentRepository } from '~~/layers/fleet-management/server/Repository/NeonFleetEquipmentRepository'
 import { sendAlertEmail } from '../../utils/mailer'
 import { SpeedAlertInfo } from '../../schemas/ISpeedAlertInfo'
 

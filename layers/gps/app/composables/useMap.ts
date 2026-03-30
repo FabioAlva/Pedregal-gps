@@ -3,8 +3,8 @@ import { useMapStore } from '../stores/useMapStore'
 import useFilter from './useFilter'
 import { formatLocalDate } from '../utils/FormatTime'
 import type { ProcessedRoute } from '../types/IMap'
-import { cacheMaxAgeFromPinia } from '../../server/utils/cache-max-age'
-import { buildDeviceRangeCacheKey, shouldUsePiniaCache } from './usePiniaCacheGuard'
+import { cacheMaxAgeFromPinia } from '~~/utils/cache-max-age'
+import { buildDeviceRangeCacheKey, shouldUsePiniaCache } from '../../../../app/composables/usePiniaCacheGuard'
 
 const MAP_ROUTE_PINIA_TTL_MS = cacheMaxAgeFromPinia.mapRoute * 1000
 

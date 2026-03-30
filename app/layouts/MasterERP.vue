@@ -29,6 +29,9 @@ const {
   isLoggingOut
 } = await useAuthSession()
 
+
+
+
 const userName = computed(() => user.value?.name || user.value?.email || 'Usuario')
 const userAvatar = computed(() => user.value?.image || undefined)
 
@@ -59,24 +62,42 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
       :min-size="16"
       :default-size="18"
     >
-      <template #header="{ collapsed }">
-        <NuxtLink to="/" class="flex items-center gap-2 group">
-          <div
-            class="flex-shrink-0 w-9 h-9 rounded-lg border border-slate-300/80 dark:border-white/20 bg-white/90 dark:bg-white/95 p-1.5 group-hover:scale-105 transition-transform duration-300"
-          >
-            <img src="/logo2.png" alt="Logo" class="w-full h-full object-contain" />
-          </div>
+  <template #header="{ collapsed }">
+  <NuxtLink 
+    to="/" 
+    class="flex items-center justify-center w-full py-2"
+    :class="[collapsed ? '' : 'px-4 flex-col items-start']"
+    title="Volver al inicio"
+  >
+    <div 
+      v-if="collapsed" 
+      class="bg-red-600 w-10 h-10 rounded-xl shadow-md flex items-center justify-center overflow-hidden"
+    >
+      <img 
+        src="/images/pedregalIcon.png" 
+        alt="P" 
+        class="w-6 h-4 object-contain"
+      />
+    </div>
 
-          <div v-if="!collapsed" class="min-w-0">
-            <p class="text-[10px] font-semibold uppercase tracking-widest text-primary truncate">
-              TGI
-            </p>
-            <h1 class="text-lg font-bold text-highlighted tracking-tight truncate leading-tight">
-              {{ title }}
-            </h1>
-          </div>
-        </NuxtLink>
-      </template>
+    <template v-else>
+      <div class="flex items-center">
+        <UIcon 
+          name="i-lucide-chevron-left" 
+          class="w-5 h-5 mr-1 text-brand-500 transition-transform duration-300 group-hover:-translate-x-1"
+        />
+        <LogoPedregal class="text-brand-500 dark:text-white w-[130px] h-auto mb-1" />
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <div class="h-[1px] w-8 bg-slate-300 dark:bg-white/20" />
+        <span class="text-[9px] font-black uppercase tracking-[0.25em] text-slate-950 dark:text-white">
+          {{ title }}
+        </span>
+      </div>
+    </template>
+  </NuxtLink>
+</template>
 
       <template #default="{ collapsed }">
         <UNavigationMenu

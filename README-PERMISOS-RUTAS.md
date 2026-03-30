@@ -52,13 +52,13 @@ Si quitas ver en la pagina frontend relacionada, el backend tambien queda bloque
 - /api/geofence-stays/report (POST)
 
 ### Team fleet
-- /api/equipament (GET, POST)
-- /api/equipament/* (PUT)
+- /api/equipment (GET, POST)
+- /api/equipment/* (PUT)
 - /api/fleets (GET)
 - /api/fleets/available (GET)
-- /api/equipamentFeet (GET, POST)
-- /api/equipamentFeet/active (GET)
-- /api/equipamentFeet/* (PATCH)
+- /api/equipmentFeet (GET, POST)
+- /api/equipmentFeet/active (GET)
+- /api/equipmentFeet/* (PATCH)
 
 ### Alertas
 - /api/gps-alert (GET, POST)

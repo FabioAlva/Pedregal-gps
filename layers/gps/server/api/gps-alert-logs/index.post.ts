@@ -1,6 +1,6 @@
 import { db } from '@nuxthub/db'
 import { GpsAlertLogService } from '../../services/GpsAlertLog/GpsAlertLog.service'
-import { cacheNames, invalidateFunctionCacheByPrefix } from '../../utils/cache-version'
+import { cacheNames, invalidateFunctionCacheByPrefix } from '~~/utils/cache-version'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)

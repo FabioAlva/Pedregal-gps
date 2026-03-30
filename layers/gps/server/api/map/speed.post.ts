@@ -1,6 +1,6 @@
 import { getSpeedData } from '../../services/Map/Map.service'
 import { influxProvider } from '../../utils/influx'
-import { cacheMaxAge } from '../../utils/cache-max-age'
+import { cacheMaxAge } from '~~/utils/cache-max-age'
 
 type MapReportBody = {
   devices: string[]

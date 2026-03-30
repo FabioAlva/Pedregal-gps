@@ -1,7 +1,7 @@
 import { db } from '@nuxthub/db'
 import { GeofenceService } from '../../services/GeoFence/Geofence.service'
 import type { NewGeofence } from '~~/shared/types/db'
-import { cacheNames, invalidateFunctionCacheByPrefix } from '../../utils/cache-version'
+import { cacheNames, invalidateFunctionCacheByPrefix } from '~~/utils/cache-version'
 
 export default defineEventHandler(async (event) => {
 

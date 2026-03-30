@@ -3,8 +3,8 @@ import { storeToRefs } from 'pinia'
 import useFilter from './useFilter'
 import type { DeviceSpeedReport, StopPoint } from '../types/IUserReport'
 import { useReportStore } from '../stores/useReportStore'
-import { cacheMaxAgeFromPinia } from '../../server/utils/cache-max-age'
-import { buildDeviceRangeCacheKey, shouldUsePiniaCache } from './usePiniaCacheGuard'
+import { cacheMaxAgeFromPinia } from '~~/utils/cache-max-age'
+import { shouldUsePiniaCache , buildDeviceRangeCacheKey} from '~~/app/composables/usePiniaCacheGuard'
 
 const MAP_DISTANCE_PINIA_TTL_MS = cacheMaxAgeFromPinia.mapDistance * 1000
 const MAP_SPEED_PINIA_TTL_MS = cacheMaxAgeFromPinia.mapSpeed * 1000

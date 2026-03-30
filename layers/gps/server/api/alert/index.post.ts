@@ -1,6 +1,6 @@
 import { SpeedAlertInfo } from "../../schemas/ISpeedAlertInfo"
 import { AlertService } from "../../services/Alert/Alert.service"
-import { cacheNames, invalidateFunctionCacheByPrefix } from '../../utils/cache-version'
+import { cacheNames, invalidateFunctionCacheByPrefix } from '../../../../../utils/cache-version'
 
 export default defineEventHandler(async (event) => {
  /*Se captura el body de la solicitud */

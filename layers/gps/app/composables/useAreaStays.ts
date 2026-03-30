@@ -2,8 +2,8 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import useFilter from './useFilter'
 import { useAreaStaysStore, type GeofenceStayReport } from '../stores/useAreaStaysStore'
-import { cacheMaxAgeFromPinia } from '../../server/utils/cache-max-age'
-import { buildDeviceRangeCacheKey, shouldUsePiniaCache } from './usePiniaCacheGuard'
+import { cacheMaxAgeFromPinia } from '~~/utils/cache-max-age'
+import { shouldUsePiniaCache } from '~~/app/composables/usePiniaCacheGuard'
 
 const AREA_STAYS_PINIA_TTL_MS = cacheMaxAgeFromPinia.geofenceStaysReport * 1000
 

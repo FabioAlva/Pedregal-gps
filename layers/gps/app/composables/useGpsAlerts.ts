@@ -1,8 +1,8 @@
 import type { GpsAlert, NewGpsAlert } from '~~/shared/types/db'
 import { storeToRefs } from 'pinia'
 import { useGpsAlertStore } from '../stores/useGpsAlertStore'
-import { cacheMaxAgeFromPinia } from '../../server/utils/cache-max-age'
-import { shouldUsePiniaCache } from './usePiniaCacheGuard'
+import { cacheMaxAgeFromPinia } from '~~/utils/cache-max-age'
+import { shouldUsePiniaCache } from '~~/app/composables/usePiniaCacheGuard'
 
 const GPS_ALERTS_PINIA_TTL_MS = cacheMaxAgeFromPinia.gpsAlerts * 1000
 
