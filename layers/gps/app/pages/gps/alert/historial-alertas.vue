@@ -61,7 +61,7 @@ onMounted(fetchAll)
     
     <header class="flex items-center justify-between px-6 py-5 border-b border-default shrink-0 bg-elevated/20">
       <div>
-        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">Operaciones & Flota</p>
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">Gestión de Alertas</p>
         <h1 class="text-2xl font-bold text-highlighted tracking-tight">Historial de Alertas</h1>
       </div>
       <div class="flex items-center gap-3">

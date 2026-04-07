@@ -1,5 +1,6 @@
 import { storeToRefs } from 'pinia'
 import { useMapStore } from '../stores/useMapStore'
+import { useGeoConfigStore } from '../stores/useGeoConfigStore'
 import useFilter from './useFilter'
 import { formatLocalDate } from '../utils/FormatTime'
 import type { ProcessedRoute } from '../types/IMap'
@@ -12,14 +13,16 @@ export function useMap() {
   
   const toast = useToast()
   const store = useMapStore()
+  const geoConfigStore = useGeoConfigStore()
   const { allRoutes, center, deviceStatus } = storeToRefs(store)
+  const { center: configCenter } = storeToRefs(geoConfigStore)
   const { listDevice, selectedDevice, validateFilters } = useFilter()
   const isLoading = ref(false)
 
   const updateCenterFromData = (data: Record<string, any>) => {
 
     if (selectedDevice.value === 'all') {
-      center.value = [-5.1961, -80.6266]
+      center.value = configCenter.value ?? [-5.1961, -80.6266]
       return
     }
 
@@ -140,7 +143,6 @@ export function useMap() {
       }
 
       const data = await response.json()
-      console.log('Fetched routes data:', Object.keys(data).length, 'devices')
       allRoutes.value = data
       store.setRouteCacheMeta(queryKey)
       updateCenterFromData(data)

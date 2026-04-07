@@ -1,3 +1,4 @@
+// layers/auth-admin/server/utils/betterauth-permissions.ts
 import type { H3Event } from 'h3'
 import { db } from '@nuxthub/db'
 import { auth } from '~~/layers/auth-admin/server/lib/auth'
@@ -28,6 +29,13 @@ export function matchPath(requestPath: string, rulePath: string): boolean {
     return normalizedRequest === base || normalizedRequest.startsWith(`${base}/`)
   }
 
+    if (normalizedRule.includes('/*/')) {
+        const ruleParts = normalizedRule.split('/').filter(Boolean)
+        const requestParts = normalizedRequest.split('/').filter(Boolean)
+        if (ruleParts.length !== requestParts.length) return false
+        return ruleParts.every((part, index) => part === '*' || part === requestParts[index])
+    }
+
   return normalizedRequest === normalizedRule
 }
 
@@ -47,119 +55,71 @@ export async function getMyPermissions(event: H3Event): Promise<PermissionPayloa
     const userId = await getAuthenticatedUserId(event)
     return await roleService.getUserPermissions(userId)
 }
-
 /**
- * Lógica principal de middleware
- */
-// export async function requireBackendPermission(event: H3Event): Promise<void> {
-//     // 1. Identificar si la ruta de backend está registrada y protegida
-//     const matchedRoute = await moduleRouteService.resolveRule(event.path, event.method || 'GET')
-//     if (!matchedRoute) return // Ruta no registrada en DB o no protegida: libre paso
-
-//     // 2. Obtener identidad y permisos consolidados
-//     const userId = await getAuthenticatedUserId(event)
-//     const permissions = await roleService.getUserPermissions(userId)
-
-//     // 3. Determinar acción requerida (basado en DB o verbo HTTP)
-//     const action: PermissionAction = matchedRoute.accionRequerida ?? methodToAction(event.method)
-    
-//     // 4. Verificar permisos directos y rutas frontend vinculadas
-//     const routePermissions = permissions.routes?.[matchedRoute.id]
-//     const linkedFrontendIds = await moduleRouteService.getLinkedFrontendIds(matchedRoute.id)
-
-//     const hasLinkedFrontendAccess = linkedFrontendIds.length === 0
-//         ? true
-//         : linkedFrontendIds.some(id => permissions.routes?.[id]?.ver === true)
-
-//     const allowed = routePermissions?.[action] === true && hasLinkedFrontendAccess
-
-//     if (allowed) return
-
-//     // 5. Manejo de errores detallado
-//     const message = !hasLinkedFrontendAccess 
-//         ? 'No autorizado: requiere acceso a una vista frontend relacionada'
-//         : `No autorizado para ${action} en ${matchedRoute.url}`
-
-//     throw createError({ statusCode: 403, statusMessage: message })
-// }
-
-/**
- * Lógica principal de middleware con DEBUG LOGS
+ * Lógica principal de autorización (Búnker Backend)
  */
 export async function requireBackendPermission(event: H3Event): Promise<void> {
-    const path = event.path;
-    const method = event.method || 'GET';
+    const path = event.path.split('?')[0]
+    const method = event.method || 'GET'
 
-    console.log(`\n--- [DEBUG AUTH] Iniciando verificación para: ${method} ${path} ---`);
+    const matchedRoute = await moduleRouteService.resolveBackendRule(path, method)
 
-    // 1. Identificar si la ruta de backend está registrada y protegida
-    const matchedRoute = await moduleRouteService.resolveRule(path, method);
-    
+    console.log('[AUTH] Request', { method, path })
+    console.log('[AUTH] Matched route', matchedRoute ? {
+        id: matchedRoute.id,
+        url: matchedRoute.url,
+        metodo: matchedRoute.metodo,
+        accionRequerida: matchedRoute.accionRequerida
+    } : null)
+
     if (!matchedRoute) {
-        console.log(`⚠️  Ruta [${path}] no registrada en DB o no marcada como protegida. Acceso LIBRE.`);
-        return;
+        throw createError({
+            statusCode: 403,
+            statusMessage: 'Acceso denegado: Recurso no mapeado.'
+        })
     }
 
-    console.log(`✅ Ruta identificada en DB: ID ${matchedRoute.id} | URL: ${matchedRoute.url} | Protegida: ${matchedRoute.protegida}`);
+    if (!matchedRoute.protegida) return
 
- // 2. Obtener identidad y permisos consolidados
-const userId = await getAuthenticatedUserId(event);
-const permissions = await roleService.getUserPermissions(userId);
+    const userId = await getAuthenticatedUserId(event)
+    const permissions = await roleService.getUserPermissions(userId)
+    const action = matchedRoute.accionRequerida ?? methodToAction(method)
 
-// --- LOG DE EMERGENCIA 1: Ver qué llega exactamente de la DB ---
-console.log(`🚨 [DATA DUMP] Permisos para la ruta ${matchedRoute.id}:`, 
-    JSON.stringify(permissions.routes?.[matchedRoute.id] || 'SIN PERMISOS')
-);
+    const routePermissions = permissions.routes?.[matchedRoute.id]
+    const hasDirectPermission = routePermissions?.[action] === true
 
-// 3. Determinar acción requerida
-const action: PermissionAction = matchedRoute.accionRequerida ?? methodToAction(method);
-
-// 4. Verificar permisos directos
-const routePermissions = permissions.routes?.[matchedRoute.id];
-const hasDirectPermission = routePermissions?.[action] === true;
-
-// --- LOG DE EMERGENCIA 2: ¿Por qué dio true? ---
-if (hasDirectPermission) {
-    console.log(`🔎 [REVISIÓN] El sistema dice SÍ porque "${action}" es true en el objeto de arriba.`);
-}
-    console.log(`🔑 Permiso directo [${action}] en esta ruta: ${hasDirectPermission ? 'SÍ' : 'NO'}`);
-
-    // 5. Verificar rutas frontend vinculadas
-    const linkedFrontendIds = await moduleRouteService.getLinkedFrontendIds(matchedRoute.id);
-    console.log(`🔗 Rutas Frontend vinculadas: [${linkedFrontendIds.join(', ')}]`);
-
+    const linkedFrontendIds = await moduleRouteService.getLinkedFrontendIds(matchedRoute.id)
+    const frontendAction = action === 'ver' ? 'ver' : action
     const hasLinkedFrontendAccess = linkedFrontendIds.length === 0
         ? true
-        : linkedFrontendIds.some(id => {
-            const canSee = permissions.routes?.[id]?.ver === true;
-            console.log(`   - Validando acceso a Frontend ID ${id}: ${canSee ? 'OK' : 'DENY'}`);
-            return canSee;
-        });
+        : linkedFrontendIds.some(id => permissions.routes?.[id]?.[frontendAction] === true)
 
-    console.log(`🌐 Acceso por vínculos frontend: ${hasLinkedFrontendAccess ? 'SÍ' : 'NO'}`);
+    console.log('[AUTH] Decision', {
+        userId,
+        action,
+        hasDirectPermission,
+        linkedFrontendIds,
+        frontendAction,
+        hasLinkedFrontendAccess
+    })
 
-    // 6. Decisión Final
-    const allowed = hasDirectPermission && hasLinkedFrontendAccess;
-    console.log(`🏁 RESULTADO FINAL: ${allowed ? '✅ PERMITIDO' : '❌ BLOQUEADO'}`);
-    console.log(`-----------------------------------------------------------\n`);
+    if (hasDirectPermission && hasLinkedFrontendAccess) {
+        return
+    }
 
-    if (allowed) return;
-
-    // 7. Manejo de errores
-    const message = !hasLinkedFrontendAccess 
-        ? 'No autorizado: requiere acceso a una vista frontend relacionada'
-        : `No autorizado para ${action} en ${matchedRoute.url}`;
-
-    throw createError({ statusCode: 403, statusMessage: message });
+    throw createError({
+        statusCode: 403,
+        statusMessage: !hasLinkedFrontendAccess
+            ? 'Acceso denegado: No tienes acceso al módulo de interfaz necesario.'
+            : `No tienes permiso para ${action} en este recurso.`
+    })
 }
 
-/**
- * Helpers privados (Se mantienen igual)
- */
+// ESTA FUNCIÓN DEBE IR FUERA
 function methodToAction(method: string | undefined): PermissionAction {
     const m = String(method || 'GET').toUpperCase()
-    if (['POST'].includes(m)) return 'agregar'
-    if (['PUT', 'PATCH'].includes(m)) return 'editar'
-    if (['DELETE'].includes(m)) return 'eliminar'
+    if (m === 'POST') return 'agregar'
+    if (m === 'PUT' || m === 'PATCH') return 'editar'
+    if (m === 'DELETE') return 'eliminar'
     return 'ver'
 }

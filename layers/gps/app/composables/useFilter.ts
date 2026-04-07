@@ -24,6 +24,7 @@ export default function useFilter() {
   const { fetchFilterDevicesSource } = useTeamFleet()
   const { selectedDevice, startDate, endDate, listDevice } = storeToRefs(store)
   const isLoadingDevices = ref(false)
+  const { initDates } = store
   
   const getDeviceIds = () => {
     if (selectedDevice.value === 'all') {
@@ -104,6 +105,7 @@ export default function useFilter() {
     listDevice,
     startDate,
     endDate,
+    initDates,
     getDeviceIds,
     validateFilters,
     isLoadingDevices,

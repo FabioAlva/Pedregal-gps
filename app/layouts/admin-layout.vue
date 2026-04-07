@@ -4,20 +4,29 @@ import MasterERP from '~/layouts/MasterERP.vue'
 
 const navigationNav: NavigationMenuItem[][] = [
   [
-    { label: 'Seguridad y Accesos', type: 'label' },
-    { label: 'Usuarios', icon: 'i-lucide-users', to: '/auth-admin/users' },
-    { label: 'Roles y Permisos', icon: 'i-lucide-shield-check', to: '/auth-admin/roles' },
-    { label: 'Relaciones de Rutas', icon: 'i-lucide-route', to: '/auth-admin/routes' },
+    {
+      label: 'Ajustes del Sistema',
+      icon: 'i-lucide-settings-2',
+      to: '/settings/company',
+      description: 'Configuracion general y datos maestros.'
+    }
   ],
   [
-    { label: 'Auditoría', type: 'label' },
-    { label: 'Logs del Sistema', icon: 'i-lucide-scroll-text', to: '/auth-admin/logs' },
+    {
+      label: 'Seguridad y Accesos',
+      icon: 'i-lucide-shield-check',
+      children: [
+        { label: 'Usuarios', to: '/settings/users', description: 'Gestión de cuentas y directorio.' },
+        { label: 'Roles', to: '/settings/roles', description: 'Perfiles con permisos por modulo.' },
+        { label: 'Rutas y Permisos', to: '/settings/routes', description: 'Vincular paginas con endpoints.' }
+      ]
+    }
   ]
 ]
 </script>
 
 <template>
-  <MasterERP title="Seguridad" :nav-items="navigationNav">
+  <MasterERP title="Configuraciones" :nav-items="navigationNav">
     <slot />
   </MasterERP>
 </template>

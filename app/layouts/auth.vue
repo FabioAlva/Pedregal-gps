@@ -1,73 +1,88 @@
 <script setup lang="ts">
 const currentYear = new Date().getFullYear()
 </script>
+
 <template>
-  <UMain class="relative min-h-screen overflow-hidden bg-neutral-100 text-slate-900 dark:bg-slate-950">
-    <div class="absolute inset-0 hidden lg:block">
-      <iframe
-        title="Mapa OpenStreetMap"
-        src="https://www.openstreetmap.org/export/embed.html?bbox=-80.6047%2C-5.0961%2C-80.5847%2C-5.0761&layer=mapnik&marker=-5.086195%2C-80.5947817"
-        class="h-full w-full border-0 map-tones transition-all duration-700"
-        loading="lazy"
+  <UMain class="relative min-h-screen overflow-hidden font-sans selection:bg-brand-500 selection:text-white bg-[#050505]">
+    
+    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      <img 
+        src="/images/fondo-login.jpg" 
+        class="absolute inset-0 w-full h-full object-cover scale-105"
+        alt="Satellite View"
       />
+      <div class="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/40 to-transparent" />
+      <div class="absolute -top-[10%] -left-[10%] w-[70%] h-[70%] rounded-full bg-brand-900/15 blur-[120px]" />
     </div>
 
-    <div class="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/95 via-white/40 to-transparent" />
-    
-    <div class="pointer-events-none absolute inset-0 map-grid-overlay opacity-10" />
-
-    <div class="absolute top-0 left-0 hidden lg:flex flex-col px-12 pt-6 pointer-events-none z-0 h-screen">
-        <div class="flex items-center gap-4">
-<LogoTGI class="h-8 w-auto text-[#005a94]" />
-          <!-- <div class="w-8 h-8 bg-white/90 rounded-lg border-2 border-slate-300 flex items-center justify-center p-2 shadow-sm flex-shrink-0">
-            <img src="/LogoTGI2.svg" alt="TGI Logo" class="w-full h-full object-contain" />
-                      <img src="/LogoTGI2.svg" alt="TGI Logo" class="w-full h-full object-contain" />
-
-          </div> -->
-
-          <!-- <p class="text-sm font-black uppercase text-slate-700">TGI Perú</p> -->
+    <div class="relative z-10 grid lg:grid-cols-[1fr_520px] min-h-screen">
+      
+      <section class="hidden lg:flex flex-col justify-between p-20 pb-16">
+        
+        <div class="flex items-center gap-5">
+          <div class="flex items-center gap-4">
+            <span class="text-4xl font-bold tracking-tighter text-white leading-none">TGI</span>
+            <div class="h-8 w-px bg-white/20" />
+            <div class="flex flex-col leading-none pt-0.5">
+              <span class="text-[11px] font-bold text-white uppercase tracking-[0.1em]">Automatización</span>
+              <span class="text-[11px] font-medium text-white/50 uppercase tracking-[0.1em]">Industrial</span>
+            </div>
+          </div>
         </div>
 
-        <div class="max-w-xl mt-auto pb-16">
-          <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-700/80">Plataforma de Monitoreo</p>
-          <h1 class="mt-4 text-5xl font-black leading-[0.98] tracking-tight text-slate-900">
-            Control operacional en tiempo real
+        <div class="max-w-3xl">
+          <div class="flex items-center gap-3 mb-10">
+            <div class="h-px w-10 bg-brand-500" />
+            <span class="text-[10px] font-black uppercase tracking-[0.5em] text-brand-500">Enterprise Solution</span>
+          </div>
+          
+          <h1 class="font-serif text-6xl xl:text-8xl font-bold leading-[0.85] tracking-tighter text-white">
+            Sistema de <br/>
+            <span class="text-red-600 italic font-medium">Gestión</span> de <br/>
+            Flota Agraria
           </h1>
-          <p class="mt-4 max-w-md text-sm text-slate-700/90">
-            Gestiona accesos, trazabilidad y estado de flota desde una sola vista.
+          
+          <p class="mt-12 max-w-sm text-lg text-white/70 leading-relaxed font-light border-l-2 border-brand-500 pl-8">
+            Gestión de flotas y monitoreo en tiempo real para la agricultura moderna.
           </p>
         </div>
-    </div>
 
-    <div class="fixed right-0 top-0 w-auto h-screen lg:w-[520px] z-20 pointer-events-auto flex flex-col bg-white/95 dark:bg-brand-500 lg:border-l lg:border-slate-300/65 dark:lg:border-white/10 transition-colors duration-500">
-        <UColorModeButton class="absolute right-4 top-4 z-20" />
-        <div class="flex flex-1 items-stretch px-4 py-16 sm:px-6 lg:px-10 dark:text-white">
-          <div class="h-full w-full">
+        <div class="flex items-center gap-3 text-[10px] font-bold text-white/30 uppercase tracking-[0.5em]">
+           <span class="w-2 h-2 rounded-full bg-brand-500" />
+           <span>Piura, Perú</span>
+        </div>
+      </section>
+
+      <aside class="relative flex flex-col bg-white dark:bg-slate-950 shadow-[-40px_0_100px_rgba(0,0,0,0.8)] border-l border-white/5">
+        <div class="absolute right-10 top-10">
+          <UColorModeButton />
+        </div>
+
+        <div class="flex-1 flex flex-col justify-center px-12 lg:px-24">
+          <div class="w-full max-w-sm mx-auto">
             <slot />
           </div>
         </div>
-        <footer class="border-t border-slate-300/70 px-6 py-4 dark:border-white/20">
-          <p class="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-white/80">
-            Copyright {{ currentYear }} Plataforma de Monitoreo. @tgi.
-          </p>
+
+        <footer class="p-12 flex justify-between items-end border-t border-slate-100 dark:border-white/5">
+          <div class="space-y-1">
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500"> @TGI INGENIERIA </p>
+          </div>
+          <p class="text-[10px] font-bold text-slate-400">© {{ currentYear }}</p>
         </footer>
+      </aside>
     </div>
+
   </UMain>
 </template>
 
 <style scoped>
-/* Modo Claro: Se ve el verde */
-.map-tones {
-  filter: grayscale(0.4) contrast(1.1) brightness(0.95) saturate(0.8);
+section, aside {
+  animation: reveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Modo Dark*/
-.dark .map-tones {
-  filter: grayscale(1) contrast(1.1) brightness(0.9);
-}
-
-.map-grid-overlay {
-  background-image: radial-gradient(rgba(0, 0, 0, 0.1) 0.5px, transparent 0.5px);
-  background-size: 32px 32px;
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(20px); filter: blur(10px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 </style>

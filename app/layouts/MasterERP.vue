@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { NavigationMenuItem, DropdownMenuItem } from '@nuxt/ui'
 
-// 1. Definición de Props
 interface Props {
   title: string
   navItems: NavigationMenuItem[][]
@@ -62,51 +61,71 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
       :min-size="16"
       :default-size="18"
     >
-  <template #header="{ collapsed }">
-  <NuxtLink 
-    to="/" 
-    class="flex items-center justify-center w-full py-2"
-    :class="[collapsed ? '' : 'px-4 flex-col items-start']"
-    title="Volver al inicio"
-  >
+ <template #header="{ collapsed }">
+  <div class="flex flex-col w-full">
     <div 
-      v-if="collapsed" 
-      class="bg-red-600 w-10 h-10 rounded-xl shadow-md flex items-center justify-center overflow-hidden"
+      class="flex flex-col w-full pt-8 pb-4" 
+      :class="[collapsed ? 'items-center' : 'px-8 items-start']"
     >
-      <img 
-        src="/images/pedregalIcon.png" 
-        alt="P" 
-        class="w-6 h-4 object-contain"
-      />
+      <NuxtLink 
+        to="/" 
+        class="group select-none"
+        :class="[collapsed ? 'flex justify-center' : 'flex flex-col']"
+      >
+        <div 
+          v-if="collapsed" 
+          class="bg-brand-500 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center overflow-hidden"
+        >
+          <img 
+            src="/images/pedregal-Icon.png" 
+            alt="P" 
+            class="w-6 h-4 object-contain brightness-0 invert"
+          />
+        </div>
+
+        <template v-else>
+          <div class="flex flex-col  ">
+            <div class="flex flex-row justify-center items-center ">
+               <UIcon 
+      name="i-lucide-chevron-left" 
+      class="w-5 h-5 -ml-1 mr-3 text-brand-500/50 group-hover:text-brand-500 transition-all duration-300 group-hover:-translate-x-1"
+    />
+    <div class = "flex flex-col">
+            <h2 class="font-serif text-2xl xl:text-3xl font-bold text-brand-500 tracking-tighter leading-none">
+              Pedregal
+            </h2>
+            <p class="font-serif italic font-medium text-brand-500 text-[10px] lowercase opacity-80 mt-1 ml-0.5 tracking-tight">
+              the fruit company
+            </p>
+            </div>
+          </div>
+ </div>
+          <div class="flex items-center gap-2 mt-2">
+            <div class="h-px w-6 bg-brand-500/30" />
+            <span class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40 leading-none">
+              {{ title }}
+            </span>
+          </div>
+        </template>
+      </NuxtLink>
     </div>
 
-    <template v-else>
-      <div class="flex items-center">
-        <UIcon 
-          name="i-lucide-chevron-left" 
-          class="w-5 h-5 mr-1 text-brand-500 transition-transform duration-300 group-hover:-translate-x-1"
-        />
-        <LogoPedregal class="text-brand-500 dark:text-white w-[130px] h-auto mb-1" />
-      </div>
-      
-      <div class="flex items-center gap-2">
-        <div class="h-[1px] w-8 bg-slate-300 dark:bg-white/20" />
-        <span class="text-[9px] font-black uppercase tracking-[0.25em] text-slate-950 dark:text-white">
-          {{ title }}
-        </span>
-      </div>
-    </template>
-  </NuxtLink>
+    <div v-if="!collapsed" class="px-8 mb-2">
+      <div class="h-[1px] w-full bg-slate-100 dark:bg-white/5" />
+    </div>
+  </div>
 </template>
 
-      <template #default="{ collapsed }">
-        <UNavigationMenu
-          :collapsed="collapsed"
-          :items="navItems"
-          orientation="vertical"
-          variant="pill"
-          class="space-y-1"
-        />
+  <template #default="{ collapsed }">
+        <div :class="[collapsed ? '' : 'px-2']">
+          <UNavigationMenu
+            :collapsed="collapsed"
+            :items="navItems"
+            orientation="vertical"
+            variant="pill"
+            class="space-y-1 mt-4 font-sans"
+          />
+        </div>
       </template>
     </UDashboardSidebar>
 
@@ -118,7 +137,6 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
           </template>
 
           <template #right>
-         
             <UColorModeButton />
 
             <UDropdownMenu

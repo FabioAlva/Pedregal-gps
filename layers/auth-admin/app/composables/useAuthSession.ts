@@ -77,6 +77,7 @@ export async function useAuthSession() {
       }
       toast.add({
         title: 'Sesión iniciada',
+        color: 'success',
         description: 'Bienvenido.',
         icon: 'i-lucide-check-circle'
       })

@@ -19,6 +19,8 @@ export const useEquipmentStore = defineStore('equipment', () => {
     equipments.value = [newDev, ...equipments.value]
   }
 
+  const resetCache = () => { equipments.value = [] } // <-- AÑADE ESTO
+
   const updateEquipmentInStore = (updatedDev: Equipment) => {
     const index = equipments.value.findIndex(e => e.id === updatedDev.id)
     if (index !== -1) {
@@ -38,6 +40,7 @@ export const useEquipmentStore = defineStore('equipment', () => {
     fetchEquipments, 
     addEquipment, 
     updateEquipmentInStore, 
-    deleteFromStore 
+    deleteFromStore ,
+    resetCache // <-- EXPÓN ESTO
   }
 })

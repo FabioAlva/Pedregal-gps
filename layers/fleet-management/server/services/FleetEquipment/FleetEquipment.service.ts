@@ -16,6 +16,10 @@ export class FleetEquipmentService {
     return await this.repo.create(data)
   }
 
+  async getAssignmentsByGpsId(idGps: string) {
+    return await this.repo.getAssignmentsByGpsId(idGps);
+  }
+  
   async getAllAssignments() {
     return await this.repo.getAssignments()
   }

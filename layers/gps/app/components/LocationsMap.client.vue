@@ -7,7 +7,7 @@ import { useGeofences } from '#layers/gps/app/composables/useGeofences'
 import CarIcon from '#layers/gps/app/components/CarIcon.vue'
 import ZoneMarker from '#layers/gps/app/components/ZoneMarker.vue'
 import type { Geofence } from '#shared/types/db'
-import { isInsideGeofence } from '#layers/gps/app/utils/geofence-geometry'
+import { asLatLng, asPolygon, isInsideGeofence } from '#layers/gps/app/utils/geofence-geometry'
 import type { ProcessedRoute } from '../types/IMap'
 
 type SaveGeofencePayload = Parameters<typeof saveGeofence>[0]
@@ -26,15 +26,49 @@ const {
 } = useGeofences()
 
 /*Para saber si esta pintando en el mapa o no y donde*/
-const { isDrawing, tempCoords } = defineProps<{
+const {
+  isDrawing,
+  tempCoords,
+  drawMode = 'geofence',
+  showRoutes = true,
+  enableRealtime = true,
+  centerOverride = null,
+  centerMarker = null,
+  boundaryCoords = null,
+  showBoundaryMarkers = false,
+  useBoundaryBounds = false,
+  showBoundaryMask = false,
+  useZoneMarker = true,
+  geofenceShape = 'circle',
+  geofenceDraftCoords = null,
+  showGeofenceDraftMarkers = false,
+  geofenceRadius = 300
+} = defineProps<{
   isDrawing: boolean
   tempCoords: [number, number] | null
+  drawMode?: 'geofence' | 'center' | 'boundary'
+  showRoutes?: boolean
+  enableRealtime?: boolean
+  centerOverride?: [number, number] | null
+  centerMarker?: [number, number] | null
+  boundaryCoords?: [number, number][] | null
+  showBoundaryMarkers?: boolean
+  useBoundaryBounds?: boolean
+  showBoundaryMask?: boolean
+  useZoneMarker?: boolean
+  geofenceShape?: 'circle' | 'polygon'
+  geofenceDraftCoords?: [number, number][] | null
+  showGeofenceDraftMarkers?: boolean
+  geofenceRadius?: number
 }>()
 
 /*Emiten eventos de cancelacion de dibujo de geocerca y de actualizacion de coordenadas */
 const emit = defineEmits<{
   cancelDrawing: []
   updateCoords: [coords: [number, number]]
+  updateCenter: [coords: [number, number]]
+  addBoundaryPoint: [coords: [number, number]]
+  addGeofencePoint: [coords: [number, number]]
 }>()
 
 /* Objeto reactivo para la nueva geocerca */
@@ -59,12 +93,30 @@ const getZoneStatus = (route: ProcessedRoute) => {
   }
 }
 
+const getGeofenceCenter = (geofence: Geofence) => asLatLng(geofence.coords)
+const getGeofencePolygon = (geofence: Geofence) => asPolygon(geofence.coords)
+
 /*Disparador de eventos al hacer clic en el mapa */
 const handleMapClick = (e: any) => {
-  if (isDrawing) {
-    const coords: [number, number] = [e.latlng.lat, e.latlng.lng]
-    emit('updateCoords', coords)
+  if (!isDrawing) return
+  const coords: [number, number] = [e.latlng.lat, e.latlng.lng]
+
+  if (drawMode === 'center') {
+    emit('updateCenter', coords)
+    return
   }
+
+  if (drawMode === 'boundary') {
+    emit('addBoundaryPoint', coords)
+    return
+  }
+
+  if (drawMode === 'geofence' && geofenceShape === 'polygon') {
+    emit('addGeofencePoint', coords)
+    return
+  }
+
+  emit('updateCoords', coords)
 }
 
 /* Disparador para guardar la nueva geocerca */
@@ -89,17 +141,140 @@ const resetDrawing = () => {
 */
 
 onMounted(async () => {
-  if (!isStreaming.value) startRealtime()
-  await fetchDevices()
-  await Promise.all([
-    fetchDeviceData({ showValidationAlert: false }),
-    fetchGeofences()
-  ])
+  if (enableRealtime) {
+    if (!isStreaming.value) startRealtime()
+    await fetchDevices()
+    await Promise.all([
+      fetchDeviceData({ showValidationAlert: false }),
+      fetchGeofences()
+    ])
+  } else {
+    await fetchGeofences()
+  }
 })
 
 /*Al desmontarse se detiene el streaming de datos en tiempo real */
 onUnmounted(() => {
-  stopRealtime()
+  if (enableRealtime) stopRealtime()
+  if (mapContainer && wheelBlocker) {
+    mapContainer.removeEventListener('wheel', wheelBlocker)
+  }
+  if (mapContainer && gestureBlocker) {
+    mapContainer.removeEventListener('gesturestart', gestureBlocker)
+  }
+  mapContainer = null
+  wheelBlocker = null
+  gestureBlocker = null
+})
+
+const lockedCenter = ref<[number, number] | null>(null)
+const mapCenter = computed(() => {
+  if (useBoundaryBounds && lockedCenter.value) return lockedCenter.value
+  return centerOverride ?? center.value
+})
+
+const boundaryPolyline = computed(() => {
+  if (!boundaryCoords?.length) return null
+  return boundaryCoords
+})
+
+const boundaryPolygon = computed(() => {
+  if (!boundaryCoords || boundaryCoords.length < 3) return null
+  return boundaryCoords
+})
+
+const boundaryBounds = computed(() => {
+  if (!boundaryCoords || boundaryCoords.length < 2) return null
+  const lats = boundaryCoords.map(point => point[0])
+  const lngs = boundaryCoords.map(point => point[1])
+  const minLat = Math.min(...lats)
+  const maxLat = Math.max(...lats)
+  const minLng = Math.min(...lngs)
+  const maxLng = Math.max(...lngs)
+  return [[minLat, minLng], [maxLat, maxLng]] as [[number, number], [number, number]]
+})
+
+const boundaryMask = computed(() => {
+  if (!boundaryCoords || boundaryCoords.length < 3) return null
+  const outerRing: [number, number][] = [
+    [90, -180],
+    [90, 180],
+    [-90, 180],
+    [-90, -180]
+  ]
+  return [outerRing, boundaryCoords]
+})
+
+const geofencePolyline = computed(() => {
+  if (!geofenceDraftCoords?.length) return null
+  return geofenceDraftCoords
+})
+
+const geofencePolygon = computed(() => {
+  if (!geofenceDraftCoords || geofenceDraftCoords.length < 3) return null
+  return geofenceDraftCoords
+})
+
+const mapRef = ref<any>(null)
+const mapInstance = ref<any>(null)
+const minZoom = ref<number | undefined>(undefined)
+const mapZoom = ref(13)
+const boundsApplied = ref(false)
+let mapContainer: HTMLElement | null = null
+let wheelBlocker: ((event: WheelEvent) => void) | null = null
+let gestureBlocker: ((event: Event) => void) | null = null
+
+const applyBoundaryConstraints = () => {
+  if (!mapInstance.value || !useBoundaryBounds || !boundaryBounds.value) return
+  const bounds = boundaryBounds.value
+  mapInstance.value.setMaxBounds(bounds)
+  mapInstance.value.options.maxBoundsViscosity = 1.0
+  mapInstance.value.fitBounds(bounds, { padding: [24, 24] })
+  const currentZoom = mapInstance.value.getZoom()
+  minZoom.value = currentZoom
+  mapZoom.value = currentZoom
+  mapInstance.value.setMinZoom(currentZoom)
+  mapInstance.value.setMaxZoom(currentZoom)
+  const center = mapInstance.value.getCenter?.()
+  if (center) {
+    lockedCenter.value = [center.lat, center.lng]
+  }
+  mapInstance.value.dragging?.disable()
+  mapInstance.value.scrollWheelZoom?.disable()
+  mapInstance.value.touchZoom?.disable()
+  mapInstance.value.doubleClickZoom?.disable()
+  mapInstance.value.boxZoom?.disable()
+  mapInstance.value.keyboard?.disable()
+  boundsApplied.value = true
+}
+
+const onMapReady = (map: any) => {
+  mapInstance.value = map
+  mapInstance.value.options.scrollWheelZoom = false
+  mapInstance.value.scrollWheelZoom?.disable()
+  mapInstance.value.doubleClickZoom?.disable()
+  mapInstance.value.boxZoom?.disable()
+  mapInstance.value.keyboard?.disable()
+  mapInstance.value.touchZoom?.disable()
+  mapInstance.value.zoomControl?.remove()
+  mapContainer = mapInstance.value.getContainer?.() ?? null
+  if (mapContainer) {
+    wheelBlocker = (event: WheelEvent) => {
+      event.preventDefault()
+    }
+    gestureBlocker = (event: Event) => {
+      event.preventDefault()
+    }
+    mapContainer.addEventListener('wheel', wheelBlocker, { passive: false })
+    mapContainer.addEventListener('gesturestart', gestureBlocker)
+  }
+  if (!boundsApplied.value) applyBoundaryConstraints()
+}
+
+watch(() => boundaryCoords, () => {
+  boundsApplied.value = false
+  lockedCenter.value = null
+  if (mapInstance.value && !boundsApplied.value) applyBoundaryConstraints()
 })
 
 </script>
@@ -107,65 +282,124 @@ onUnmounted(() => {
 <template>
 
   <LMap
-    :zoom="13"
-    :center="center"
+    ref="mapRef"
+    :zoom="mapZoom"
+    :center="mapCenter"
     :use-global-leaflet="false"
     :class="isDrawing ? 'cursor-crosshair' : ''"
+    :zoom-control="false"
+    :scroll-wheel-zoom="false"
+    :double-click-zoom="false"
+    :box-zoom="false"
+    :keyboard="false"
+    :touch-zoom="false"
+    :max-bounds="useBoundaryBounds ? (boundaryBounds || undefined) : undefined"
+    :max-bounds-viscosity="useBoundaryBounds ? 1.0 : 0.0"
+    :min-zoom="minZoom"
     @click="handleMapClick"
+    @ready="onMapReady"
   >
     <LTileLayer
       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       attribution="&amp;copy; <a href=&quot;https://www.openstreetmap.org/&quot;>OpenStreetMap</a> contributors"
       layer-type="base"
     />
-    <LCircle
+    <template
       v-for="z in geofences as Geofence[]"
       :key="z.id"
-      :lat-lng="z.coords as [number, number]"
-      :radius="Number(z.radius) || 300"
-      :color="z.color || '#3b82f6'"
-      :fill-opacity="0.2"
     >
-      <LPopup>
-        <div class="p-3 flex flex-col gap-3 min-w-[150px]">
-          <span
-            class="text-[10px] font-bold uppercase text-gray-500 tracking-tight"
-          >
-            Editar Geocerca
-          </span>
+      <LCircle
+        v-if="z.tipo === 'circle' && getGeofenceCenter(z)"
+        :lat-lng="getGeofenceCenter(z) as [number, number]"
+        :radius="Number(z.radius) || 300"
+        :color="z.color || '#3b82f6'"
+        :fill-opacity="0.2"
+      >
+        <LPopup>
+          <div class="p-3 flex flex-col gap-3 min-w-[150px]">
+            <span
+              class="text-[10px] font-bold uppercase text-gray-500 tracking-tight"
+            >
+              Editar Geocerca
+            </span>
 
-          <UInput
-            v-model="z.nombre"
-            size="xs"
-            placeholder="Nombre..."
-            @keyup.enter="updateGeofence(z.id, { nombre: z.nombre })"
-          />
+            <UInput
+              v-model="z.nombre"
+              size="xs"
+              placeholder="Nombre..."
+              @keyup.enter="updateGeofence(z.id, { nombre: z.nombre })"
+            />
 
-          <div class="flex gap-2 border-t pt-2">
-            <UButton
-              label="Guardar"
-              icon="i-lucide-save"
-              size="xs"
-              block
-              class="flex-1"
-              @click="updateGeofence(z.id, { nombre: z.nombre })"
-            />
-            <UButton
-              icon="i-lucide-trash"
-              variant="soft"
-              size="xs"
-              @click="deleteGeofence(z.id)"
-            />
+            <div class="flex gap-2 border-t pt-2">
+              <UButton
+                label="Guardar"
+                icon="i-lucide-save"
+                size="xs"
+                block
+                class="flex-1"
+                @click="updateGeofence(z.id, { nombre: z.nombre })"
+              />
+              <UButton
+                icon="i-lucide-trash"
+                variant="soft"
+                size="xs"
+                @click="deleteGeofence(z.id)"
+              />
+            </div>
           </div>
-        </div>
-      </LPopup>
-      <LTooltip v-if="z.nombre">
-        {{ z.nombre }}
-      </LTooltip>
-    </LCircle>
+        </LPopup>
+        <LTooltip v-if="z.nombre">
+          {{ z.nombre }}
+        </LTooltip>
+      </LCircle>
+
+      <LPolygon
+        v-else-if="getGeofencePolygon(z).length >= 3"
+        :lat-lngs="getGeofencePolygon(z)"
+        :color="z.color || '#3b82f6'"
+        :fill-opacity="0.12"
+      >
+        <LPopup>
+          <div class="p-3 flex flex-col gap-3 min-w-[150px]">
+            <span
+              class="text-[10px] font-bold uppercase text-gray-500 tracking-tight"
+            >
+              Editar Geocerca
+            </span>
+
+            <UInput
+              v-model="z.nombre"
+              size="xs"
+              placeholder="Nombre..."
+              @keyup.enter="updateGeofence(z.id, { nombre: z.nombre })"
+            />
+
+            <div class="flex gap-2 border-t pt-2">
+              <UButton
+                label="Guardar"
+                icon="i-lucide-save"
+                size="xs"
+                block
+                class="flex-1"
+                @click="updateGeofence(z.id, { nombre: z.nombre })"
+              />
+              <UButton
+                icon="i-lucide-trash"
+                variant="soft"
+                size="xs"
+                @click="deleteGeofence(z.id)"
+              />
+            </div>
+          </div>
+        </LPopup>
+        <LTooltip v-if="z.nombre">
+          {{ z.nombre }}
+        </LTooltip>
+      </LPolygon>
+    </template>
   
     <ZoneMarker
-      v-if="isDrawing"
+      v-if="useZoneMarker && isDrawing && drawMode === 'geofence' && geofenceShape === 'circle'"
       v-model:radius="newZone.radius"
       :coords="tempCoords"
       :color="newZone.color"
@@ -174,22 +408,108 @@ onUnmounted(() => {
       @cancel="resetDrawing"
     />
 
-    <template
-      v-for="route in processedRoutes"
-      :key="route.id"
-    >
-      <LPolyline
-        v-if="route.points.length > 0"
-        :lat-lngs="route.points"
-        :color="route.color"
-        :weight="3"
-        z-index="1000"
-      />
+    <LCircle
+      v-if="isDrawing && drawMode === 'geofence' && geofenceShape === 'circle' && tempCoords"
+      :lat-lng="tempCoords"
+      :radius="Number(geofenceRadius || newZone.radius)"
+      :color="newZone.color || '#3b82f6'"
+      :fill-opacity="0.12"
+      :dash-array="'8, 8'"
+    />
 
-      <LMarker
-        v-if="route.lastPoint"
-        :lat-lng="route.lastPoint"
+    <LMarker
+      v-if="centerMarker"
+      :lat-lng="centerMarker"
+    >
+      <LIcon
+        :icon-size="[18, 18]"
+        :icon-anchor="[9, 9]"
+        class-name="clear-marker"
       >
+        <div class="w-4 h-4 rounded-full bg-slate-700 border-2 border-white shadow-md"></div>
+      </LIcon>
+      <LTooltip :options="{ sticky: true }">
+        <span class="text-[10px] font-bold uppercase">Centro</span>
+      </LTooltip>
+    </LMarker>
+
+    <LPolyline
+      v-if="boundaryPolyline"
+      :lat-lngs="boundaryPolyline"
+      color="#475569"
+      :weight="3"
+      :dash-array="'6, 6'"
+    />
+
+    <LPolygon
+      v-if="boundaryPolygon"
+      :lat-lngs="boundaryPolygon"
+      color="#475569"
+      :fill-opacity="0.08"
+    />
+
+    <LPolygon
+      v-if="showBoundaryMask && boundaryMask"
+      :lat-lngs="boundaryMask"
+      :stroke="false"
+      :fill-opacity="0.55"
+      :fill-color="'#0f172a'"
+    />
+
+    <LCircleMarker
+      v-for="(point, index) in (showBoundaryMarkers && boundaryCoords ? boundaryCoords : [])"
+      :key="`boundary-${index}`"
+      :lat-lng="point"
+      :radius="4"
+      :color="'#475569'"
+      :fill-color="'#cbd5e1'"
+      :fill-opacity="0.9"
+    />
+
+    <LPolyline
+      v-if="isDrawing && drawMode === 'geofence' && geofenceShape === 'polygon' && geofencePolyline"
+      :lat-lngs="geofencePolyline"
+      color="#475569"
+      :weight="3"
+      :dash-array="'6, 6'"
+    />
+
+    <LPolygon
+      v-if="isDrawing && drawMode === 'geofence' && geofenceShape === 'polygon' && geofencePolygon"
+      :lat-lngs="geofencePolygon"
+      color="#475569"
+      :fill-opacity="0.12"
+    />
+
+    <LCircleMarker
+      v-for="(point, index) in (showGeofenceDraftMarkers && geofenceDraftCoords ? geofenceDraftCoords : [])"
+      :key="`geofence-${index}`"
+      :lat-lng="point"
+      :radius="4"
+      :color="'#475569'"
+      :fill-color="'#cbd5e1'"
+      :fill-opacity="0.95"
+    />
+
+    <template
+      v-if="showRoutes"
+    >
+      <template
+        v-for="route in processedRoutes"
+        :key="route.id"
+      >
+        <LPolyline
+          v-if="route.points.length > 0"
+          :lat-lngs="route.points"
+          :color="route.color"
+          :weight="3"
+          z-index="1000"
+        />
+
+        <LMarker
+          v-if="route.lastPoint"
+          :lat-lng="route.lastPoint"
+        >
         <LIcon
           :icon-size="[35, 35]"
           :icon-anchor="[20, 40]"
@@ -324,7 +644,8 @@ onUnmounted(() => {
             </div>
           </div>
         </LTooltip>
-      </LMarker>
+        </LMarker>
+      </template>
     </template>
   </LMap>
 </template>

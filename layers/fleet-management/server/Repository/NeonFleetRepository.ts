@@ -1,15 +1,61 @@
 import * as schema from '~~/server/db/schema'
 import type { NeonHttpDatabase } from 'drizzle-orm/neon-http'
 import { IFleetRepository } from './Interfaces/IFleetRepository'
-import { eq, isNull, notInArray, or } from 'drizzle-orm'
+import { and, eq, gt, isNull, notInArray, or } from 'drizzle-orm'
 
 export class NeonFleetRepository implements IFleetRepository{
   constructor(private db: NeonHttpDatabase<typeof schema>) {}
 
-  // Agrega esto a tu NeonFleetRepository
-async getAll() {
-  return await this.db.select().from(schema.fleet)
-}
+    async getAll() {
+      const now = new Date()
+      const rows = await this.db
+        .select({
+          fleet: schema.fleet,
+          operadorId: schema.operators.id,
+          operadorNombres: schema.operators.nombres,
+          operadorApellidos: schema.operators.apellidos,
+          assignmentFechaInicio: schema.fleetAssignments.fechaInicio
+        })
+        .from(schema.fleet)
+        .leftJoin(
+          schema.fleetAssignments,
+          and(
+            eq(schema.fleetAssignments.flotaId, schema.fleet.id),
+            or(isNull(schema.fleetAssignments.fechaFin), gt(schema.fleetAssignments.fechaFin, now))
+          )
+        )
+        .leftJoin(schema.operators, eq(schema.fleetAssignments.operadorId, schema.operators.id))
+
+      const byFleet = new Map<number, {
+        fleet: typeof schema.fleet.$inferSelect
+        operadorId: number | null
+        operadorNombres: string | null
+        operadorApellidos: string | null
+        fechaInicio: Date | null
+      }>()
+
+      for (const row of rows) {
+        const current = byFleet.get(row.fleet.id)
+        const fechaInicio = row.assignmentFechaInicio ?? null
+
+        if (!current || (fechaInicio && (!current.fechaInicio || fechaInicio > current.fechaInicio))) {
+          byFleet.set(row.fleet.id, {
+            fleet: row.fleet,
+            operadorId: row.operadorId ?? null,
+            operadorNombres: row.operadorNombres ?? null,
+            operadorApellidos: row.operadorApellidos ?? null,
+            fechaInicio
+          })
+        }
+      }
+
+      return Array.from(byFleet.values()).map(row => ({
+        ...row.fleet,
+        conductor: row.operadorId
+          ? { id: row.operadorId, nombre: `${row.operadorNombres ?? ''} ${row.operadorApellidos ?? ''}`.trim() }
+          : null
+      }))
+    }
 
   async getBasic() {
     return await this.db.select({

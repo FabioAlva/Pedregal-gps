@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { useMap } from '#layers/gps/app/composables/useMap'
+import { useGeoConfig } from '#layers/gps/app/composables/useGeoConfig'
 import FilterComponent from '#layers/gps/app/components/FilterComponent.vue'
 import GeofencePanel from '#layers/gps/app/components/GeofencePanel.vue'
 import LocationsMap from '#layers/gps/app/components/LocationsMap.client.vue'
 
 const { fetchDeviceData, center } = useMap()
+const { center: configCenter, boundary, fetchConfig } = useGeoConfig()
 
 const isDrawing = ref(false)
 const tempCoords = ref<[number, number] | null>(null)
@@ -21,6 +23,10 @@ const resetDrawing = () => {
   isDrawing.value = false
   tempCoords.value = null
 }
+
+onMounted(async () => {
+  await fetchConfig()
+})
 </script>
 
 <template>
@@ -32,17 +38,15 @@ const resetDrawing = () => {
       <LocationsMap
         :is-drawing="isDrawing"
         :temp-coords="tempCoords"
+        :boundary-coords="boundary"
+        :center-marker="configCenter"
+        :use-boundary-bounds="true"
+        :show-boundary-mask="true"
         @cancel-drawing="resetDrawing"
         @update-coords="(c) => (tempCoords = c)"
       />
      </ClientOnly>
 
-      <GeofencePanel
-        :is-drawing="isDrawing"
-        @place-selected="(c) => (center = [c.lat, c.lng])"
-        @open-create-modal="handleOpenCreate"
-        @cancel-drawing="resetDrawing"
-      />
     </div>
   </div>
 </template>

@@ -1,3 +1,4 @@
+//server/middleware/authorization.ts
 import { requireBackendPermission } from '#layers/auth-admin/server/utils/betterauth-permissions'
 
 const PUBLIC_API_PREFIXES = [

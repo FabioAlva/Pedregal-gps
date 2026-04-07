@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { GpsAlert } from '~~/shared/types/db'
 
 const props = defineProps<{
@@ -8,6 +9,11 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits(['update:modelValue', 'save'])
+
+const isOpen = computed({
+  get: () => props.modelValue,
+  set: (val) => emit('update:modelValue', val)
+})
 
 const form = ref({
   descripcion: '',
@@ -41,49 +47,54 @@ const confirm = () => {
 </script>
 
 <template>
-  <div v-if="modelValue" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-gray-900/20 backdrop-blur-sm" @click="close" />
-
-    <UCard class="relative w-full max-w-md shadow-xl ring-1 ring-gray-200 dark:ring-gray-800">
-      <template #header>
-        <div class="flex items-center justify-between">
-          <h3 class="font-bold text-lg text-gray-900 dark:text-white">
-            {{ alert ? 'Editar alerta' : 'Nueva alerta' }}
-          </h3>
-          <UButton variant="ghost" icon="i-lucide-x" @click="close" />
-        </div>
-      </template>
-
-      <div class="space-y-4 py-2">
-        <UFormField label="Descripción">
-          <UInput v-model="form.descripcion" placeholder="Ej: Límite velocidad" class="w-full" />
-        </UFormField>
-
-        <UFormField label="Límite de valor">
-          <UInput v-model="form.limiteValor" type="number" class="w-full" />
-        </UFormField>
-
-        <UFormField label="Activo">
-          <div class="flex items-center gap-2">
-            <input
-              id="activo"
-              type="checkbox"
-              class="h-4 w-4 rounded border-default text-primary focus:ring-primary"
-              v-model="form.activo"
-            />
-            <label for="activo" class="text-sm text-muted">Habilitar alerta</label>
+  <UModal v-model:open="isOpen" :portal="true" :ui="{ content: 'p-0 bg-transparent' }">
+    <template #content>
+      <div class="w-full max-w-md bg-white rounded-[28px] shadow-2xl overflow-hidden">
+        <div class="bg-slate-950 p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="w-11 h-11 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center">
+                <UIcon name="i-lucide-bell-ring" class="w-5 h-5 text-brand-500" />
+              </div>
+              <div>
+                <span class="text-[10px] font-black uppercase tracking-widest text-brand-200">Alertas</span>
+                <h3 class="text-xl font-black tracking-tight mt-1">{{ alert ? 'Editar alerta' : 'Nueva alerta' }}</h3>
+                <p class="text-xs text-slate-300">Gestion de alertas GPS.</p>
+              </div>
+            </div>
+            <UButton variant="ghost" color="white" icon="i-lucide-x" @click="close" />
           </div>
-        </UFormField>
-      </div>
+        </div>
 
-      <template #footer>
-        <div class="flex justify-end gap-3">
-          <UButton variant="soft" @click="close">Cancelar</UButton>
-          <UButton :loading="saving" color="primary" :disabled="!form.descripcion || form.limiteValor <= 0" @click="confirm">
+        <div class="p-6 space-y-4">
+          <UFormField label="Descripcion">
+            <UInput v-model="form.descripcion" placeholder="Ej: Limite velocidad" class="w-full" />
+          </UFormField>
+
+          <UFormField label="Limite de valor">
+            <UInput v-model="form.limiteValor" type="number" class="w-full" />
+          </UFormField>
+
+          <UFormField label="Activo">
+            <div class="flex items-center gap-2">
+              <input
+                id="activo"
+                type="checkbox"
+                class="h-4 w-4 rounded border-default text-primary focus:ring-primary"
+                v-model="form.activo"
+              />
+              <label for="activo" class="text-sm text-muted">Habilitar alerta</label>
+            </div>
+          </UFormField>
+        </div>
+
+        <div class="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
+          <UButton variant="ghost" color="neutral" @click="close">Cancelar</UButton>
+          <UButton :loading="saving" color="brand" :disabled="!form.descripcion || form.limiteValor <= 0" @click="confirm">
             Guardar
           </UButton>
         </div>
-      </template>
-    </UCard>
-  </div>
+      </div>
+    </template>
+  </UModal>
 </template>

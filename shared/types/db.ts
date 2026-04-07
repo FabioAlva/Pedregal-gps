@@ -12,7 +12,18 @@ import type {
   fleetEquipment,
   gpsAlerts,
   gpsAlertLogs,
-  equipment
+  equipment,
+  operators,
+  fleetAssignments,
+  expenseCategories,
+  fleetExpenses,
+  implementsTable,
+  inspectionTemplates,
+  inspections,
+  inspectionIssues,
+  inventoryParts,
+  maintenanceSchedules,
+  maintenanceLogs
 } from '@nuxthub/db/schema'
 
 export type EquipmentFleet = typeof fleetEquipment.$inferSelect
@@ -29,6 +40,17 @@ export type ModuleRoute = typeof moduleRoutes.$inferSelect
 export type RoleRoutePermission = typeof roleRoutePermissions.$inferSelect
 export type UserRole = typeof userRoles.$inferSelect
 export type Fleet = typeof fleet.$inferSelect
+export type Operator = typeof operators.$inferSelect
+export type FleetAssignment = typeof fleetAssignments.$inferSelect
+export type ExpenseCategory = typeof expenseCategories.$inferSelect
+export type FleetExpense = typeof fleetExpenses.$inferSelect
+export type Implement = typeof implementsTable.$inferSelect
+export type InspectionTemplate = typeof inspectionTemplates.$inferSelect
+export type Inspection = typeof inspections.$inferSelect
+export type InspectionIssue = typeof inspectionIssues.$inferSelect
+export type InventoryPart = typeof inventoryParts.$inferSelect
+export type MaintenanceSchedule = typeof maintenanceSchedules.$inferSelect
+export type MaintenanceLog = typeof maintenanceLogs.$inferSelect
 
 export type NewFleetEquipment = typeof fleetEquipment.$inferInsert
 export type NewGpsAlertLog = typeof gpsAlertLogs.$inferInsert
@@ -43,6 +65,40 @@ export type NewRole = typeof roles.$inferInsert
 export type NewModuleRoute = typeof moduleRoutes.$inferInsert
 export type NewRoleRoutePermission = typeof roleRoutePermissions.$inferInsert
 export type NewUserRole = typeof userRoles.$inferInsert
+export type NewOperator = typeof operators.$inferInsert
+export type NewFleetAssignment = typeof fleetAssignments.$inferInsert
+export type NewExpenseCategory = typeof expenseCategories.$inferInsert
+export type NewFleetExpense = typeof fleetExpenses.$inferInsert
+export type NewImplement = typeof implementsTable.$inferInsert
+export type NewInspectionTemplate = typeof inspectionTemplates.$inferInsert
+export type NewInspection = typeof inspections.$inferInsert
+export type NewInspectionIssue = typeof inspectionIssues.$inferInsert
+export type NewInventoryPart = typeof inventoryParts.$inferInsert
+export type NewMaintenanceSchedule = typeof maintenanceSchedules.$inferInsert
+export type NewMaintenanceLog = typeof maintenanceLogs.$inferInsert
+
+export type FuelExpenseMetadata = {
+  fuelEntryDate?: string | null
+  vendorName?: string | null
+  reference?: string | null
+  flags?: {
+    personal?: boolean
+    partialFuelUp?: boolean
+    resetUsage?: boolean
+  }
+  photos?: string[]
+  comments?: string | null
+}
+
+export type GenericExpenseMetadata = {
+  vendorName?: string | null
+  reference?: string | null
+  details?: string | null
+  photos?: string[]
+  comments?: string | null
+}
+
+export type ExpenseMetadata = FuelExpenseMetadata | GenericExpenseMetadata
 
 // Legacy aliases kept while app naming transitions from section -> module.
 export type SectionRoute = ModuleRoute

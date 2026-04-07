@@ -2,6 +2,16 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+  extends: [
+    'layers/auth-admin',
+    'layers/expenses',
+    'layers/fleet-management',
+    'layers/gps',
+    'layers/operators',
+    'layers/inspections',
+    'layers/workshop'
+  ],
+
   
    runtimeConfig: {
     mqttBrokerUrl: '',
@@ -46,6 +56,11 @@ export default defineNuxtConfig({
     '@nuxtjs/leaflet',
     'nuxt-echarts'
   ],
+  ui: {
+    theme: {
+      colors: ['primary', 'secondary', 'tertiary', 'info', 'success', 'warning', 'error']
+    }
+  },
   vite: {
     optimizeDeps: {
       include: [
@@ -70,6 +85,6 @@ export default defineNuxtConfig({
       'DataZoomComponent'
     ]
   },
-  css: ['~/assets/css/main.css', 'leaflet/dist/leaflet.css']
+  css: ['~/assets/css/vendor.css', '~/assets/css/main.css', 'leaflet/dist/leaflet.css']
 
 })

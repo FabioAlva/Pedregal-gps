@@ -14,15 +14,7 @@ export const useModuleStore = defineStore('module', () => {
   }
 
   const addRoute = (newRoute: ModuleRoute) => {
-    console.log('--- STORE: addRoute INICIO ---')
-    console.log('Cantidad antes:', routes.value.length)
-    
-    // Usamos el spread para asegurar nueva referencia
-    routes.value = [...routes.value, newRoute]
-    
-    console.log('Nueva ruta agregada:', newRoute)
-    console.log('Cantidad después:', routes.value.length)
-    console.log('--- STORE: addRoute FIN ---')
+     routes.value = [...routes.value, newRoute]
   }
 
   const updateRouteInStore = (updatedRoute: ModuleRoute) => {

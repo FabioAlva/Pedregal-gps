@@ -11,6 +11,11 @@
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.4.1",
+    "@fullcalendar/core": "^6.1.20",
+    "@fullcalendar/daygrid": "^6.1.20",
+    "@fullcalendar/interaction": "^6.1.20",
+    "@fullcalendar/timegrid": "^6.1.20",
+    "@fullcalendar/vue3": "^6.1.20",
     "@influxdata/influxdb3-client": "^2.1.0",
     "@neondatabase/serverless": "^1.0.2",
     "@nuxt/ui": "^4.5.1",
@@ -31,6 +36,7 @@
     "postgres": "^3.4.8",
     "tailwindcss": "^4.2.2",
     "vue": "^3.5.30",
+    "vue-cal": "^4.10.2",
     "vue-router": "^4.6.4",
     "zod": "^4.3.6"
   },

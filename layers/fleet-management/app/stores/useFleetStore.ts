@@ -16,6 +16,9 @@ export const useFleetStore = defineStore('fleet', () => {
     fleets.value = [newFleet, ...fleets.value]
   }
 
+
+const resetCache = () => { fleets.value = [] } // <-- AÑADE ESTO
+
   const updateFleetInStore = (updatedFleet: Fleet) => {
     const index = fleets.value.findIndex(f => f.id === updatedFleet.id)
     if (index !== -1) {
@@ -29,5 +32,5 @@ export const useFleetStore = defineStore('fleet', () => {
     fleets.value = fleets.value.filter(f => f.id !== id)
   }
 
-  return { fleets, isLoading, fetchFleets, addFleet, updateFleetInStore, deleteFleetInStore }
+  return { fleets, isLoading, fetchFleets, addFleet, updateFleetInStore, deleteFleetInStore,resetCache }
 })

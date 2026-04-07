@@ -10,10 +10,6 @@ export default defineNitroPlugin(async (nitroApp) => {
   const caPath = path.resolve(process.cwd(), config.ca)
   const certPath = path.resolve(process.cwd(), config.cert)
   const keyPath = path.resolve(process.cwd(), config.key)
-  console.log('[MQTT] Intentando leer certificados:')
-  console.log('  CA:', caPath)
-  console.log('  CERT:', certPath)
-  console.log('  KEY:', keyPath)
 
   // Validar que las rutas no estén vacías
   if (!config.ca || !config.cert || !config.key) {

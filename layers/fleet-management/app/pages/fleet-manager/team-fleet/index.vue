@@ -8,8 +8,6 @@ import useFilter from '#layers/gps/app/composables/useFilter'
 import { useFilterStore } from '#layers/gps/app/stores/useFilterStore'
 import { parseLocalDateStr } from '#layers/gps/app/utils/FormatTime'
 
-definePageMeta({ layout: 'fleetmanager' })
-
 // PATRÓN UNIFICADO: Usamos el nuevo composable limpio
 const {
   listGps, isLoadingGps, fetchGps, listFleets, saveAssignment, availableGps,
@@ -106,7 +104,7 @@ const statusMap: any = {
 
 const columns: TableColumn<Assignment>[] = [
   { accessorKey: 'idGps', header: 'ID GPS', cell: ({ row }) => h('span', { class: 'font-mono text-[11px] font-bold' }, row.original.idGps) },
-  { accessorKey: 'placaAuto', header: 'Placa', cell: ({ row }) => h('span', { class: 'font-mono text-[11px] font-black bg-primary/5 text-primary px-2 py-0.5 rounded border border-primary/20 uppercase' }, row.original.placaAuto) },
+  { accessorKey: 'placaAuto', header: 'Placa', cell: ({ row }) => h('span', { class: 'font-mono text-[11px] font-black bg-primary/5 text-primary px-2 py-0.5 rounded-none border border-primary/20 uppercase' }, row.original.placaAuto) },
   { accessorKey: 'fechaAsignacion', header: 'Instalado', cell: ({ row }) => h('span', { class: 'text-[11px] font-mono text-muted' }, parseLocalDateStr(row.original.fechaAsignacion)) },
   { accessorKey: 'fechaRetiro', header: 'Retirado', cell: ({ row }) => h('span', { class: 'text-[11px] font-mono text-muted' }, parseLocalDateStr(row.original.fechaRetiro)) },
   {
@@ -129,21 +127,21 @@ const columns: TableColumn<Assignment>[] = [
   <div class="flex h-full w-full bg-background overflow-hidden">
     <aside class="w-[300px] shrink-0 border-r border-default flex flex-col bg-elevated/10">
       <div class="px-6 py-5 border-b border-default shrink-0">
-        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">Hardware</p>
-        <h2 class="text-lg font-bold text-highlighted">Inventario GPS</h2>
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">Equipos GPS</p>
+        <h2 class="text-lg font-bold text-highlighted">Inventario </h2>
       </div>
 
       <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar">
         <div v-if="isLoadingGps" class="flex flex-col items-center py-10 opacity-40">
-          <div class="w-5 h-5 border-2 border-t-primary rounded-full animate-spin mb-2" />
+          <div class="w-5 h-5 border-2 border-t-primary rounded-none animate-spin mb-2" />
           <span class="text-[10px] font-bold uppercase tracking-widest">Cargando...</span>
         </div>
 
         <div v-for="gps in listGps" v-else :key="gps.id" 
-          class="p-4 rounded-xl border border-default bg-elevated shadow-sm transition-all hover:border-primary/30">
+          class="p-4 rounded-none border border-default bg-elevated shadow-sm transition-all hover:border-primary/30">
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
-              <span :class="['h-2 w-2 rounded-full', statusMap[gps.state]?.dot]" />
+              <span :class="['h-2 w-2 rounded-none', statusMap[gps.state]?.dot]" />
               <span class="text-sm font-black text-highlighted">{{ gps.name }}</span>
             </div>
             <span :class="['text-[9px] font-black uppercase', statusMap[gps.state]?.text]">{{ statusMap[gps.state]?.label }}</span>
@@ -166,8 +164,8 @@ const columns: TableColumn<Assignment>[] = [
     <main class="flex-1 flex flex-col min-w-0 bg-background overflow-hidden">
       <header class="px-6 py-5 border-b border-default flex items-center justify-between bg-elevated/20">
         <div>
-          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">Operaciones</p>
-          <h1 class="text-2xl font-bold text-highlighted tracking-tight">Asignaciones</h1>
+          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">Asignaciones</p>
+          <h1 class="text-2xl font-bold text-highlighted tracking-tight">Listado de Asignaciones</h1>
         </div>
       </header>
 
@@ -178,7 +176,7 @@ const columns: TableColumn<Assignment>[] = [
 
       <div class="flex-1 overflow-hidden relative">
         <div v-if="isLoadingAssignments" class="absolute inset-0 bg-background/50 flex items-center justify-center z-10 backdrop-blur-sm">
-           <div class="w-6 h-6 border-2 border-t-primary rounded-full animate-spin" />
+           <div class="w-6 h-6 border-2 border-t-primary rounded-none animate-spin" />
         </div>
         
         <div class="h-full overflow-auto custom-scrollbar">

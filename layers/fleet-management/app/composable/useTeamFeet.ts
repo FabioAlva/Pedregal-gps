@@ -1,10 +1,15 @@
 import { storeToRefs } from 'pinia'
 import { useTeamFeetStore } from '../stores/useTeamFeetStore'
 import type { Assignment, EquipmentApiItem, FleetApiItem, Gps } from '../../../gps/app/types/ITeemFleet'
+import { useEquipmentStore } from '../stores/useEquipmentStore'
+import { useFleetStore } from '../stores/useFleetStore'
 
 export function useTeamFleet() {
   const toast = useToast()
   const store = useTeamFeetStore()
+  const equipmentStore = useEquipmentStore() // <-- INICIALIZA
+  const fleetStore = useFleetStore()         // <-- INICIALIZA
+  
   const { 
     listGps, 
     listAssignments, 
@@ -104,6 +109,44 @@ export function useTeamFleet() {
     return getFilterDevicesFromStore()
   }
 
+  const getAssignmentsByGpsId = async (idGps: string): Promise<Assignment[]> => {
+    try {
+      return await $fetch<Assignment[]>(`/api/equipmentFeet/history/${idGps}`)
+    } catch (e) {
+      toast.add({ title: 'Error', description: 'Error al cargar el historial del equipo', color: 'error' })
+      return []
+    }
+  }
+
+// Desvincular equipo (Cerrar Asignación + Liberar Equipo)
+  const disconnectEquipment = async (idAsignacion: number, equipoId: number) => {
+    try {
+      // 1. Cerrar la asignación (usando tu PATCH existente)
+      await $fetch(`/api/equipmentFeet/${idAsignacion}`, {
+        method: 'PATCH', 
+        body: { retiradoEl: new Date().toISOString() }
+      })
+
+      // 2. Liberar el equipo a estado 1 (Disponible)
+      await $fetch(`/api/equipment/${equipoId}`, { 
+        method: 'PUT', 
+        body: { estadoId: 1 } 
+      })
+
+      toast.add({ title: 'Desvinculado', description: 'Equipo retirado con éxito', color: 'success' })
+
+      // 3. Limpiar todos los cachés afectados
+      store.resetStore()
+      equipmentStore.resetCache()
+      fleetStore.resetCache()
+
+      return true
+    } catch (e) {
+      toast.add({ title: 'Error', description: 'Fallo al desvincular equipo', color: 'error' })
+      return false
+    }
+  }
+
   // 6. Guardar Asignación
   const saveAssignment = async (payload: { flotaId: number, equipoId: number }) => {
     try {
@@ -112,7 +155,9 @@ export function useTeamFleet() {
         body: payload
       })
       toast.add({ title: 'Éxito', description: 'Asignación creada', color: 'success' })
-      store.resetStore() // Limpiamos para forzar recarga de datos frescos
+     store.resetStore()           // Limpia Asignaciones
+      equipmentStore.resetCache()  // Limpia Equipos (para que pase a estado 2)
+      fleetStore.resetCache()
       return true
     } catch (e) {
       toast.add({ title: 'Error', description: 'Error al asignar', color: 'error' })
@@ -134,7 +179,9 @@ export function useTeamFleet() {
     fetchAssignments,
     fetchActiveAssignments,
     fetchFilterDevicesSource,
+    getAssignmentsByGpsId, 
     saveAssignment,
-    resetTeamFeetData: store.resetStore
+    resetTeamFeetData: store.resetStore,
+    disconnectEquipment
   }
 }

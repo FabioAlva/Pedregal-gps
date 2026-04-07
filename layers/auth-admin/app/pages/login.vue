@@ -23,98 +23,92 @@ const state = reactive({ email: "", password: "" });
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     const success = await login(event.data.email, event.data.password);
-    if (success) {
-    await navigateTo("/dashboard", { replace: true })
+  if (success) {
+    await navigateTo("/", { replace: true })
   }
 }
 </script>
-
 <template>
-  <div class="flex h-full font-bold w-full max-w-md flex-col justify-center">
-    <div class="text-left space-y-3">
-      <div>
-        <p
-          class="mt-1 text-xs uppercase tracking-widest text-slate-900 dark:text-white/65"
-        >
-          Iniciar sesion
-        </p>
-        <LogoPedregal
-          class="text-brand-500 dark:text-white mt-4 hidden md:block w-[400px] h-auto"
-        />
+  <div class="flex h-full w-full max-w-sm flex-col justify-center">
+    <header class="mb-6">
+      <p class="text-[9px] uppercase tracking-[0.4em] text-slate-500 dark:text-white/40 font-black mb-2">
+        Portal de Acceso
+      </p>
+      
+      <div class="space-y-1">
+        <h2 class="font-serif text-5xl xl:text-6xl font-bold text-brand-500 tracking-tighter leading-[0.75]">
+          Pedregal
+        </h2>
+        <p class="font-serif italic font-medium text-brand-500 text-xl lowercase opacity-90 ml-1 tracking-tight">
+    the fruit company
+  </p>
       </div>
-    </div>
+      
+      <div class="mt-4 h-[2px] w-10 bg-brand-500" />
+    </header>
 
-     <UForm
+    <UForm
       :schema="schema"
       :state="state"
-      class="mt-8 space-y-5"
+      class="space-y-1 w-full" 
       @submit="onSubmit"
-     >
-      <UFormField
-        label="Correo Electrónico"
+    >
+      <UFormField 
+        label="Usuario" 
         name="email"
-        :ui="{
-          label:
-            'text-[11px] uppercase tracking-[0.14em] text-slate-600 dark:text-white font-bold',
-          error: 'text-[11px] mt-1 text-red-500 dark:text-white font-medium',
+        :ui="{ 
+          container: 'mb-5', 
+          error: 'text-[10px] absolute mt-1 text-red-500' 
         }"
       >
         <UInput
           v-model="state.email"
           type="email"
-          placeholder="ejemplo@correo.com"
-          icon="i-lucide-mail"
+          placeholder="usuario@pedregal.com"
+          icon="i-lucide-user"
+          size="md"
           class="w-full"
-          :ui="{
-            base: 'bg-white/70 text-slate-900 border-slate-300 dark:bg-black/40 dark:text-white dark:border-white/20 dark:focus:border-white',
-          }"
         />
       </UFormField>
 
-      <UFormField
-        label="Contraseña"
+      <UFormField 
+        label="Contraseña" 
         name="password"
-        :ui="{
-          label:
-            'text-[11px] uppercase tracking-[0.14em] text-slate-600 dark:text-white font-bold',
-          error: 'text-[11px] mt-1 text-red-500 dark:text-white font-medium',
+        :ui="{ 
+          container: 'mb-5', 
+          error: 'text-[10px] absolute mt-1 text-red-500' 
         }"
       >
         <UInput
           v-model="state.password"
           :type="isPasswordVisible ? 'text' : 'password'"
           placeholder="••••••••"
-          icon="i-lucide-lock"
+          icon="i-lucide-shield-check"
+          size="md"
           class="w-full"
-          :ui="{
-            base: 'bg-white/70 text-slate-900 border-slate-300 dark:bg-black/40 dark:text-white dark:border-white/20 dark:focus:border-white',
-          }"
         >
           <template #trailing>
             <UButton
-              color="primary"
               variant="link"
+              color="neutral"
               :icon="isPasswordVisible ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-              :padded="false"
               @click="isPasswordVisible = !isPasswordVisible"
-              class="dark:text-white/70"
             />
           </template>
         </UInput>
       </UFormField>
 
-      <UButton
-        type="submit"
-        label="Ingresar"
-        block
-        :loading="isLoggingIn"
-        size="lg"
-        class="mt-2 font-bold"
-        :ui="{
-          base: 'dark:bg-white dark:text-[#7b0d18] dark:hover:bg-slate-200 transition-colors',
-        }"
-        icon="i-lucide-log-in"
-      />
+      <div class="pt-4">
+        <UButton
+          type="submit"
+          block
+          :loading="isLoggingIn"
+          size="lg"
+          class="transition-all duration-300 active:scale-[0.98]"
+        >
+          Iniciar Sesión
+        </UButton>
+      </div>
     </UForm>
   </div>
 </template>

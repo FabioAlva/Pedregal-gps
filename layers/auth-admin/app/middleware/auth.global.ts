@@ -1,22 +1,44 @@
-import type { FrontPermissionPayload } from "#layers/auth-admin/app/utils/route-permissions";
+import type { FrontPermissionPayload } from "~~/layers/auth-admin/app/utils/navigation-map";
 import {
-  hasViewPermission,
-  resolveRouteByPath,
-} from "#layers/auth-admin/app/utils/route-permissions";
+  getNavigationMap,
+  matchCurrentView,
+  canUserView,
+} from "~~/layers/auth-admin/app/utils/navigation-map";
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  const headers = useRequestHeaders(["cookie"]) as Record<string, string>;
-  /*Envia la url , se normaliza y ve si tiene reglas o no */
-  const matchedRoute = await resolveRouteByPath(to.path, headers);
-  /* Si la ruta no requiere protección, se permite el acceso sin verificar permisos */
-  if (!matchedRoute?.id) {
+
+
+  /* Rutas Publicas*/
+  const publicRoutes = ['/', '/login', '/public'];
+  if (publicRoutes.includes(to.path)) {
     return;
   }
+  
+  /* Obtiene los encabezados de la solicitud */
+  const headers = useRequestHeaders(["cookie"]) as Record<string, string>;
+  
+  /* Resuelve la ruta por su path */
+  const matchedRoute = await matchCurrentView(to.path, headers);
+  
+    if (!matchedRoute?.id) {
+      return
+      //abortNavigation(createError({ statusCode: 403, message: 'Ruta no registrada' }))
+    }
+
+    if (matchedRoute.protegida === false) {
+      return
+    }
+  
   /* Recupera los permisos del storage , sino hay retorna null*/
   const permissionsState = useState<FrontPermissionPayload | null>(
     "auth:my-permissions",
     () => null,
   );
+
+  const resolveFirstAllowedRoute = async () => {
+    const map = await getNavigationMap(headers)
+    return map.find(route => canUserView(permissionsState.value, route.id))?.url ?? null
+  }
 
   /*Evalua si hay permisos cacheados disponibles */
   const hasUsableCachedPermissions = Boolean(
@@ -36,6 +58,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     } catch (error: any) {
       if (error?.statusCode === 401) {
         permissionsState.value = null;
+
         console.warn(
           "[auth.middleware] sin sesion valida, redirigiendo a /login",
           { to: to.path },
@@ -59,11 +82,21 @@ export default defineNuxtRouteMiddleware(async (to) => {
     }
   }
 
-  const canView = hasViewPermission(permissionsState.value, matchedRoute.id);
+  const canView = canUserView(permissionsState.value, matchedRoute.id);
   if (!canView) {
-    // Creamos una cookie que dure solo 10 segundos
     const deniedCookie = useCookie("auth_denied_msg", { maxAge: 10 });
     deniedCookie.value = `No tienes permiso para acceder a ${matchedRoute.url}`;
-    return navigateTo("/", { replace: true });
+    const fallback = await resolveFirstAllowedRoute()
+    if (fallback && fallback !== to.path) {
+      return navigateTo(fallback, { replace: true })
+    }
+    return navigateTo("/login", { replace: true })
+  }
+
+  if (to.path === '/') {
+    const fallback = await resolveFirstAllowedRoute()
+    if (fallback && fallback !== '/') {
+      return navigateTo(fallback, { replace: true })
+    }
   }
 });

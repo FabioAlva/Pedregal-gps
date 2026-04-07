@@ -8,9 +8,6 @@ export default defineEventHandler(async (event) => {
 
   try {
     const permissions = await getMyPermissions(event)
-    console.info('[api/auth/mis-permisos] success', {
-      routes: Object.keys(permissions?.routes ?? {})
-    })
     return permissions
   } catch (error: any) {
     console.error('[api/auth/mis-permisos] error', {

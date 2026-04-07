@@ -24,6 +24,9 @@ export class ModuleRouteService {
     }
   }
 
+
+  
+
   async getAll() {
     return await this.repo.findAll()
   }
@@ -50,12 +53,43 @@ export class ModuleRouteService {
     await this.repo.delete(id)
   }
 
-  async resolveRule(path: string, method: string): Promise<ModuleRoute | null> {
+
+  /**
+   * Retorna todas las rutas de frontend ordenadas para el middleware.
+   * Útil para el endpoint /api/module-routes
+   */
+  async getSortedFrontendRules(): Promise<ModuleRoute[]> {
+    const rules = await this.repo.findProtectedFrontendRoutes()
+    
+    // Ordenamos de mayor a menor longitud de URL
+    // Esto garantiza que el frontend evalúe /gps/geocercas antes que /gps
+    return [...rules].sort((a, b) => b.url.length - a.url.length)
+  }
+
+  /**
+   * Resuelve una ruta de frontend específica (opcional si necesitas validar en server)
+   */
+  async resolveFrontendRule(path: string): Promise<ModuleRoute | null> {
+    const rules = await this.getSortedFrontendRules()
+    
+    return rules.find((rule) => matchPath(path, rule.url)) ?? null
+  }
+
+  
+/**
+   * Resuelve la regla de BACKEND aplicable a una petición API.
+   * Prioriza las rutas más específicas (más largas) para evitar falsos positivos.
+   */
+  
+  async resolveBackendRule(path: string, method: string) {
     const rules = await this.repo.findProtectedBackendRoutes()
-    return rules.find((rule) => {
-      const methodMatches = !rule.metodo || rule.metodo.toUpperCase() === method.toUpperCase()
-      return methodMatches && matchPath(path, rule.url)
-    }) ?? null
+
+    return rules
+      .sort((a, b) => b.url.length - a.url.length)
+      .find(rule => {
+        const methodMatches = !rule.metodo || rule.metodo.toUpperCase() === method.toUpperCase()
+        return methodMatches && matchPath(path, rule.url)
+      })
   }
 
   async getLinkedFrontendIds(backendId: number): Promise<number[]> {

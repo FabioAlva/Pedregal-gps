@@ -3,22 +3,41 @@ import type { NeonHttpDatabase } from 'drizzle-orm/neon-http'
 import type { IFleetEquipmentRepository } from './Interfaces/IEquipmentFleetRepository'
 import type { NewFleetEquipment } from '#shared/types/db'
 
-import { eq, and, inArray, isNull, sql } from 'drizzle-orm'
+import { eq, and, inArray, isNull, sql ,desc} from 'drizzle-orm'
 import * as schema from '~~/server/db/schema'
 
 export class NeonFleetEquipmentRepository implements IFleetEquipmentRepository {
   constructor(private db: NeonHttpDatabase<typeof schema>) {}
 
+  /**
+   * Retorna todo el historial (activo y pasado) de un GPS específico
+   */
 
-
-  
-
+  async getAssignmentsByGpsId(idGps: string) {
+    return await this.db
+      .select({
+        idAsignacion: schema.fleetEquipment.id,
+        equipoId: schema.equipment.id,      // <--- ¡AÑADE ESTO! El ID real del equipo (1, 2, 3...)
+        idGps: schema.equipment.codigo,
+        nombreGps: schema.equipment.nombre,
+        imei: sql<string>`${schema.equipment.especificaciones}->>'imei'`,
+        placaAuto: schema.fleet.placa,
+        fechaAsignacion: schema.fleetEquipment.instaladoEl,
+        fechaRetiro: schema.fleetEquipment.retiradoEl
+      })
+      .from(schema.fleetEquipment)
+      .innerJoin(schema.equipment, eq(schema.fleetEquipment.equipoId, schema.equipment.id))
+      .innerJoin(schema.fleet, eq(schema.fleetEquipment.flotaId, schema.fleet.id))
+      .where(eq(schema.equipment.codigo, idGps))
+      .orderBy(desc(schema.fleetEquipment.instaladoEl)); // Los más recientes primero
+  }
 
   /* Historico que ya saca la placa del auto , nombre del gps , etc */
   async getAssignments() {
     return await this.db
       .select({
         idAsignacion: schema.fleetEquipment.id,
+        equipoId: schema.equipment.id,      // <-- AÑADIDO: ID real del equipo para poder hacer PUT luego
         idGps: schema.equipment.codigo,
         nombreGps: schema.equipment.nombre,
         imei: sql<string>`${schema.equipment.especificaciones}->>'imei'`,
@@ -35,6 +54,7 @@ export class NeonFleetEquipmentRepository implements IFleetEquipmentRepository {
     return await this.db
       .select({
         idAsignacion: schema.fleetEquipment.id,
+        equipoId: schema.equipment.id,
         idGps: schema.equipment.codigo,
         nombreGps: schema.equipment.nombre,
         imei: sql<string>`${schema.equipment.especificaciones}->>'imei'`,
@@ -103,6 +123,7 @@ async create(data: NewFleetEquipment): Promise<number> {
     const [result] = await this.db
       .select({
         idAsignacion: schema.fleetEquipment.id,
+        equipoId: schema.equipment.id,      // <-- AÑADIDO: ID real del equipo para poder hacer PUT luego
         idGps: schema.equipment.codigo,
         placaAuto: schema.fleet.placa,
       })

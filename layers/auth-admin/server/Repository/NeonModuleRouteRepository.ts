@@ -70,6 +70,18 @@ export class NeonModuleRouteRepository implements IModuleRouteRepository {
       .orderBy(asc(moduleRoutes.id))
   }
 
+async findProtectedFrontendRoutes(): Promise<ModuleRoute[]> {
+  return await this.db
+    .select()
+    .from(moduleRoutes)
+    .where(and(
+      eq(moduleRoutes.tipoRuta, 'frontend'), 
+      eq(moduleRoutes.protegida, true)
+    ))
+    .orderBy(asc(moduleRoutes.id))
+}
+
+
   async getLinkedFrontendIds(backendId: number): Promise<number[]> {
     const rows = await this.db
       .select({ frontendRouteId: frontendBackendRouteLinks.frontendRouteId })

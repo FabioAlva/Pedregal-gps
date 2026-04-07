@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 const props = defineProps<{
   modelValue: boolean
   loading?: boolean
@@ -25,6 +26,11 @@ const emit = defineEmits<{
     protegida: boolean
   }): void
 }>()
+
+const isOpen = computed({
+  get: () => props.modelValue,
+  set: (val) => emit('update:modelValue', val)
+})
 
 const form = ref({
   nombre: '',
@@ -80,74 +86,79 @@ const close = () => emit('update:modelValue', false)
 </script>
 
 <template>
-  <div v-if="modelValue" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-gray-900/20 backdrop-blur-sm" @click="close" />
-
-    <UCard class="relative w-full max-w-lg shadow-xl ring-1 ring-gray-200 dark:ring-gray-800">
-      <template #header>
-        <div class="flex items-center justify-between">
-          <h3 class="font-bold text-lg text-gray-900 dark:text-white">
-            {{ route ? 'Editar ruta' : 'Crear ruta' }}
-          </h3>
-          <UButton variant="ghost" icon="i-lucide-x" @click="close" />
+  <UModal v-model:open="isOpen" :portal="true" :ui="{ content: 'p-0 bg-transparent' }">
+    <template #content>
+      <div class="w-full max-w-lg bg-white rounded-[28px] shadow-2xl overflow-hidden">
+        <div class="bg-slate-950 p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="w-11 h-11 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center">
+                <UIcon name="i-lucide-route" class="w-5 h-5 text-brand-500" />
+              </div>
+              <div>
+                <span class="text-[10px] font-black uppercase tracking-widest text-brand-200">Rutas</span>
+                <h3 class="text-xl font-black tracking-tight mt-1">{{ route ? 'Editar ruta' : 'Crear ruta' }}</h3>
+                <p class="text-xs text-slate-300">Permisos y endpoints.</p>
+              </div>
+            </div>
+            <UButton variant="ghost" color="white" icon="i-lucide-x" @click="close" />
+          </div>
         </div>
-      </template>
 
-      <div class="space-y-4 py-2">
-        <UFormField label="Tipo de ruta">
-          <USelect
-            v-model="form.tipoRuta"
-            :items="[
-              { label: 'Frontend', value: 'frontend' },
-              { label: 'Backend', value: 'backend' }
-            ]"
-          />
-        </UFormField>
+        <div class="p-6 space-y-4">
+          <UFormField label="Tipo de ruta">
+            <USelect
+              v-model="form.tipoRuta"
+              :items="[
+                { label: 'Frontend', value: 'frontend' },
+                { label: 'Backend', value: 'backend' }
+              ]"
+            />
+          </UFormField>
 
-        <UFormField label="Patron de URL">
-          <UInput v-model="form.url" placeholder="Ej: /gps/api" class="w-full" />
-        </UFormField>
+          <UFormField label="Patron de URL">
+            <UInput v-model="form.url" placeholder="Ej: /gps/api" class="w-full" />
+          </UFormField>
 
-        <UFormField label="Nombre de la ruta">
-          <UInput v-model="form.nombre" placeholder="Ej: API GPS" class="w-full" />
-        </UFormField>
+          <UFormField label="Nombre de la ruta">
+            <UInput v-model="form.nombre" placeholder="Ej: API GPS" class="w-full" />
+          </UFormField>
 
-        <UFormField v-if="form.tipoRuta === 'backend'" label="Metodo HTTP">
-          <USelect
-            v-model="form.metodo"
-            :items="[
-              { label: 'GET', value: 'GET' },
-              { label: 'POST', value: 'POST' },
-              { label: 'PUT', value: 'PUT' },
-              { label: 'PATCH', value: 'PATCH' },
-              { label: 'DELETE', value: 'DELETE' }
-            ]"
-          />
-        </UFormField>
+          <UFormField v-if="form.tipoRuta === 'backend'" label="Metodo HTTP">
+            <USelect
+              v-model="form.metodo"
+              :items="[
+                { label: 'GET', value: 'GET' },
+                { label: 'POST', value: 'POST' },
+                { label: 'PUT', value: 'PUT' },
+                { label: 'PATCH', value: 'PATCH' },
+                { label: 'DELETE', value: 'DELETE' }
+              ]"
+            />
+          </UFormField>
 
-        <UFormField v-if="form.tipoRuta === 'backend'" label="Accion requerida">
-          <USelect
-            v-model="form.accionRequerida"
-            :items="[
-              { label: 'Ver', value: 'ver' },
-              { label: 'Agregar', value: 'agregar' },
-              { label: 'Editar', value: 'editar' },
-              { label: 'Eliminar', value: 'eliminar' }
-            ]"
-          />
-        </UFormField>
+          <UFormField v-if="form.tipoRuta === 'backend'" label="Accion requerida">
+            <USelect
+              v-model="form.accionRequerida"
+              :items="[
+                { label: 'Ver', value: 'ver' },
+                { label: 'Agregar', value: 'agregar' },
+                { label: 'Editar', value: 'editar' },
+                { label: 'Eliminar', value: 'eliminar' }
+              ]"
+            />
+          </UFormField>
 
-        <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-          <input v-model="form.protegida" type="checkbox" class="h-4 w-4" />
-          Ruta protegida
-        </label>
-      </div>
+          <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <input v-model="form.protegida" type="checkbox" class="h-4 w-4" />
+            Ruta protegida
+          </label>
+        </div>
 
-      <template #footer>
-        <div class="flex justify-end gap-3">
-          <UButton variant="soft" @click="close">Cancelar</UButton>
+        <div class="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
+          <UButton variant="ghost" color="neutral" @click="close">Cancelar</UButton>
           <UButton
-            color="primary"
+            color="brand"
             :loading="loading"
             :disabled="!form.url.trim()"
             @click="confirmSave"
@@ -155,7 +166,7 @@ const close = () => emit('update:modelValue', false)
             Guardar
           </UButton>
         </div>
-      </template>
-    </UCard>
-  </div>
+      </div>
+    </template>
+  </UModal>
 </template>

@@ -29,93 +29,98 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full overflow-hidden">
-    <div class="shrink-0 border-b border-default">
+  <div class="w-full h-screen flex flex-col p-10 font-sans text-slate-900 overflow-hidden">
+    <header class="flex items-center justify-between mb-8">
+      <div class="flex items-center gap-4">
+        <div>
+          <h1 class="font-serif text-5xl font-bold tracking-tighter text-slate-950 leading-none">Estadias por Area</h1>
+          <nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mt-3">
+            <span>Flota Agricola</span>
+            <UIcon name="i-lucide-chevron-right" class="w-3 h-3 opacity-30" />
+            <span class="text-slate-600">Estadias por Area</span>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <div class="bg-white border border-slate-200 shadow-sm mb-6 overflow-hidden">
       <FilterComponent :on-search="fetchAreaStays" />
     </div>
 
-    <div class="flex-1 overflow-auto p-5">
-      <div class="flex items-center justify-between mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Eventos</p>
+        <p class="text-3xl font-black text-slate-950 mt-2">{{ report?.count ?? 0 }}</p>
+      </div>
+      <div class="border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Tiempo total</p>
+        <p class="text-3xl font-black text-primary mt-2">{{ report?.totalHours ?? 0 }} h</p>
+      </div>
+      <div class="border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Minutos totales</p>
+        <p class="text-3xl font-black text-success mt-2">{{ report?.totalMinutes ?? 0 }}</p>
+      </div>
+    </div>
+
+    <UAlert
+      v-if="errorMessage"
+      color="error"
+      variant="soft"
+      icon="i-lucide-circle-alert"
+      :description="errorMessage"
+      class="mb-6"
+    />
+
+    <div class="bg-white border border-slate-200 shadow-[0_12px_40px_rgba(0,0,0,0.03)] overflow-hidden flex-1 flex flex-col">
+      <div class="px-10 py-6 border-b border-slate-100 flex items-center justify-between">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-widest text-primary">Geolocalizacion</p>
-          <h1 class="text-xl font-bold text-highlighted">Ingresos y salidas por area</h1>
+          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Detalle</p>
+          <h2 class="text-lg font-bold text-slate-950">Estadias por Zona</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <USelectMenu
+            v-model="selectedZone"
+            :items="zoneOptions"
+            value-key="value"
+            label-key="label"
+            size="xs"
+            class="w-56"
+            placeholder="Filtrar por zona"
+          />
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ rows.length }} registros</span>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-        <UCard>
-          <p class="text-xs text-muted uppercase tracking-wide">Eventos</p>
-          <p class="text-2xl font-black text-highlighted">{{ report?.count ?? 0 }}</p>
-        </UCard>
-        <UCard>
-          <p class="text-xs text-muted uppercase tracking-wide">Tiempo total</p>
-          <p class="text-2xl font-black text-primary">{{ report?.totalHours ?? 0 }} h</p>
-        </UCard>
-        <UCard>
-          <p class="text-xs text-muted uppercase tracking-wide">Minutos totales</p>
-          <p class="text-2xl font-black text-success">{{ report?.totalMinutes ?? 0 }}</p>
-        </UCard>
+      <div v-if="isLoading" class="py-16 flex justify-center">
+        <UIcon name="i-lucide-loader-2" class="w-6 h-6 animate-spin text-primary" />
       </div>
 
-      <UAlert
-        v-if="errorMessage"
-        color="error"
-        variant="soft"
-        icon="i-lucide-circle-alert"
-        :description="errorMessage"
-        class="mb-4"
-      />
+      <div v-else-if="!rows.length" class="py-16 text-center text-sm text-slate-400">
+        No hay ingresos/salidas para el rango seleccionado.
+      </div>
 
-      <UCard>
-        <template #header>
-          <div class="flex items-center justify-between">
-            <span class="text-sm font-semibold text-highlighted">Detalle de estadias</span>
-            <div class="flex items-center gap-3">
-              <USelectMenu
-                v-model="selectedZone"
-                :items="zoneOptions"
-                value-key="value"
-                label-key="label"
-                size="xs"
-                class="w-56"
-                placeholder="Filtrar por zona"
-              />
-              <span class="text-xs text-muted">{{ rows.length }} registros</span>
-            </div>
-          </div>
-        </template>
-
-        <div v-if="isLoading" class="py-12 flex justify-center">
-          <UIcon name="i-lucide-loader-2" class="w-6 h-6 animate-spin text-primary" />
-        </div>
-
-        <div v-else-if="!rows.length" class="py-12 text-center text-sm text-muted">
-          No hay ingresos/salidas para el rango seleccionado.
-        </div>
-
-        <div v-else class="overflow-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-default text-left text-xs uppercase text-muted">
-                <th class="py-2 pr-4">Area</th>
-                <th class="py-2 pr-4">GPS</th>
-                <th class="py-2 pr-4">Ingreso</th>
-                <th class="py-2 pr-4">Salida</th>
-                <th class="py-2 pr-4">Duracion</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="stay in rows" :key="stay.id" class="border-b border-default/60">
-                <td class="py-3 pr-4 font-semibold text-highlighted">{{ stay.geofenceName }}</td>
-                <td class="py-3 pr-4 font-mono text-xs">{{ stay.deviceId }}</td>
-                <td class="py-3 pr-4">{{ formatDateValue(stay.enteredAt) }}</td>
-                <td class="py-3 pr-4">{{ formatDateValue(stay.exitedAt) }}</td>
-                <td class="py-3 pr-4 font-mono">{{ formatDuration(stay.durationSeconds) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </UCard>
+      <div v-else class="overflow-auto flex-1">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50/50">
+            <tr class="text-left">
+              <th class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-10 py-5">Area</th>
+              <th class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-10 py-5">GPS</th>
+              <th class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-10 py-5">Ingreso</th>
+              <th class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-10 py-5">Salida</th>
+              <th class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-10 py-5">Duracion</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="stay in rows" :key="stay.id" class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+              <td class="px-10 py-6 font-semibold text-slate-950">{{ stay.geofenceName }}</td>
+              <td class="px-10 py-6 font-mono text-xs text-slate-600">{{ stay.deviceId }}</td>
+              <td class="px-10 py-6">{{ formatDateValue(stay.enteredAt) }}</td>
+              <td class="px-10 py-6">{{ formatDateValue(stay.exitedAt) }}</td>
+              <td class="px-10 py-6 font-mono">{{ formatDuration(stay.durationSeconds) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </template>
