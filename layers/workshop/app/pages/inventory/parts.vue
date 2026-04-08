@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, h, onMounted, ref, resolveComponent } from 'vue'
+import { computed, h, onMounted, ref, resolveComponent, watch } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type { InventoryPart } from '#shared/types/db'
 import { useInventoryParts } from '../../composables/useInventoryParts'
 import InventoryPartModal from '../../components/InventoryPartModal.vue'
 
+// Resolve components para usar con h()
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 
@@ -27,6 +28,7 @@ onMounted(() => {
   fetchParts()
 })
 
+// Lógica de datos
 const rows = computed(() => parts.value.map(part => ({
   ...part,
   isLow: part.stockActual <= part.stockMinimo
@@ -42,6 +44,20 @@ const filteredRows = computed(() => {
   )
 })
 
+// Paginación
+const page = ref(1)
+const itemsPerPage = 25
+const pagedRows = computed(() => {
+  const start = (page.value - 1) * itemsPerPage
+  return filteredRows.value.slice(start, start + itemsPerPage)
+})
+const totalRows = computed(() => filteredRows.value.length)
+
+watch([search, totalRows], () => {
+  page.value = 1
+})
+
+// Acciones
 const openCreatePart = () => {
   selectedPart.value = null
   isModalOpen.value = true
@@ -64,36 +80,24 @@ const handleSavePart = async (payload: any) => {
 }
 
 const handleDeletePart = async (id: number) => {
-  if (confirm('¿Eliminar este repuesto?')) {
+  if (confirm('¿Estás seguro de eliminar este repuesto?')) {
     await deletePart(id)
   }
 }
 
+// Definición de Columnas (Fuera de las funciones)
 const columns: TableColumn<any>[] = [
   {
     accessorKey: 'nombre',
     header: 'Repuesto',
     cell: ({ row }) => h('div', [
       h('p', { class: 'text-sm font-bold text-slate-900' }, row.original.nombre),
-      h('p', { class: 'text-[11px] text-slate-500' }, row.original.descripcion ?? 'Sin descripcion')
-    ])
-  },
-  {
-    accessorKey: 'sku',
-    header: 'SKU',
-    cell: ({ row }) => h('span', { class: 'font-mono text-xs font-bold text-slate-600' }, row.original.sku ?? '-')
-  },
-  {
-    accessorKey: 'stockActual',
-    header: 'Stock',
-    cell: ({ row }) => h('div', [
-      h('p', { class: 'text-xs font-bold text-slate-700' }, `${row.original.stockActual} ${row.original.unidad ?? ''}`),
-      h('p', { class: 'text-[11px] text-slate-400' }, `Min: ${row.original.stockMinimo}`)
+      h('p', { class: 'text-[11px] text-slate-500' }, row.original.descripcion ?? 'Sin descripción')
     ])
   },
   {
     accessorKey: 'ubicacion',
-    header: 'Ubicacion',
+    header: 'Ubicación',
     cell: ({ row }) => h('span', { class: 'text-xs font-semibold text-slate-500' }, row.original.ubicacion ?? '-')
   },
   {
@@ -111,7 +115,6 @@ const columns: TableColumn<any>[] = [
   },
   {
     id: 'actions',
-    meta: { class: { td: 'text-right' } },
     cell: ({ row }) => h('div', { class: 'flex justify-end gap-1' }, [
       h(UButton, {
         icon: 'i-lucide-pencil',
@@ -131,7 +134,7 @@ const columns: TableColumn<any>[] = [
 </script>
 
 <template>
-  <div class="w-full h-screen flex flex-col p-10 font-sans text-slate-900 overflow-hidden">
+<div class="w-full h-screen flex flex-col p-10 font-sans text-slate-900 overflow-hidden">
     <header class="flex items-center justify-between mb-12">
       <div class="flex items-center gap-4">
         <div>
@@ -153,7 +156,7 @@ const columns: TableColumn<any>[] = [
 
     <div class="bg-white border border-slate-200 shadow-[0_12px_40px_rgba(0,0,0,0.03)] overflow-hidden flex-1 flex flex-col">
       <UTable
-        :data="filteredRows"
+        :data="pagedRows"
         :columns="columns"
         :loading="isLoading"
         class="flex-1"
@@ -167,12 +170,15 @@ const columns: TableColumn<any>[] = [
 
       <div class="px-10 py-4 border-t border-slate-50 bg-slate-50/30 flex justify-between items-center">
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-          Total: {{ filteredRows.length }} repuestos
+          Total: {{ totalRows }} repuestos
         </p>
-        <div class="flex gap-2">
-          <div class="w-1 h-1 bg-brand-500 rounded-none" />
-          <div class="w-1 h-1 bg-slate-200 rounded-none" />
-        </div>
+        <UPagination
+          v-if="totalRows > itemsPerPage"
+          v-model:page="page"
+          :items-per-page="itemsPerPage"
+          :total="totalRows"
+          size="xs"
+        />
       </div>
     </div>
 

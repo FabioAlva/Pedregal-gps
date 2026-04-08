@@ -205,8 +205,7 @@ const onEventClick = (payload: any) => {
       </div>
 
       <div class="flex items-center gap-3">
-        <UButton color="neutral" variant="ghost" class="px-6 font-bold" label="Probar UModal" @click="isTestModalOpen = true" />
-        <UButton color="brand" icon="i-lucide-plus" class="px-6 font-bold" label="Nuevo Turno" @click="openCreateModal()" />
+        <UButton color="brand" icon="i-lucide-plus" class="px-6 font-bold text-white bg-primary" label="Nuevo Turno" @click="openCreateModal()" />
       </div>
     </header>
 

@@ -33,8 +33,8 @@ function matchPath(requestPath: string, rulePath: string): boolean {
   const normalizedRule = normalizePath(rulePath)
 
   if (normalizedRule.endsWith('/*')) {
-    const base = normalizedRule.slice(0, -2)
-    return normalizedRequest === base || normalizedRequest.startsWith(`${base}/`)
+    const base = normalizedRule.slice(0, -2)                                        
+    return normalizedRequest === base || normalizedRequest.startsWith(`${base}/`) 
   }
 
   if (normalizedRule.includes('/*/')) {
@@ -90,7 +90,6 @@ export async function getNavigationMap(headers?: Record<string, string>): Promis
 export async function matchCurrentView(path: string, headers?: Record<string, string>): Promise<FrontModuleRouteRule | null> {
   const normalizedPath = normalizePath(path)
   const map = await getNavigationMap(headers)
-
   return map.find((view) => {
     return matchPath(normalizedPath, view.url)
   }) ?? null

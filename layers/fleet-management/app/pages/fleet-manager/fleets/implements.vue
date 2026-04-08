@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, h, onMounted, ref, resolveComponent } from 'vue'
+import { computed, h, onMounted, ref, resolveComponent, watch } from 'vue'
 import type { TableColumn, TableRow } from '@nuxt/ui'
 import type { Implement } from '~~/shared/types/db'
 import { useImplements } from '../../../composable/useImplements'
@@ -56,6 +56,20 @@ const filteredRows = computed(() => {
     (row.serie ?? '').toLowerCase().includes(q) ||
     row.flotaPlaca.toLowerCase().includes(q)
   )
+})
+
+const page = ref(1)
+const itemsPerPage = 20
+
+const pagedRows = computed(() => {
+  const start = (page.value - 1) * itemsPerPage
+  return filteredRows.value.slice(start, start + itemsPerPage)
+})
+
+const totalRows = computed(() => filteredRows.value.length)
+
+watch([search, totalRows], () => {
+  page.value = 1
 })
 
 const columns: TableColumn<any>[] = [
@@ -173,13 +187,13 @@ const handleDelete = async (id: number) => {
       <div class="flex items-center bg-white p-2 border border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-brand-500/20">
         <UInput v-model="search" variant="none" placeholder="Buscar implemento..." icon="i-lucide-search" class="w-64 font-medium" />
         <div class="w-px h-8 bg-slate-100 mx-3" />
-        <UButton color="brand" icon="i-lucide-plus" class="px-6 font-bold" label="Nuevo implemento" @click="openCreate" />
+        <UButton color="brand" icon="i-lucide-plus" class="px-6 font-bold text-white bg-primary" label="Nuevo implemento" @click="openCreate" />
       </div>
     </header>
 
     <div class="bg-white border border-slate-200 shadow-[0_12px_40px_rgba(0,0,0,0.03)] overflow-hidden flex-1 flex flex-col">
       <UTable
-        :data="filteredRows"
+        :data="pagedRows"
         :columns="columns"
         :loading="isLoading"
         @select="onSelectRow"
@@ -194,12 +208,15 @@ const handleDelete = async (id: number) => {
 
       <div class="px-10 py-4 border-t border-slate-50 bg-slate-50/30 flex justify-between items-center">
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-          Total: {{ filteredRows.length }} implementos registrados
+          Total: {{ totalRows }} implementos registrados
         </p>
-        <div class="flex gap-2">
-          <div class="w-1 h-1 bg-brand-500 rounded-none" />
-          <div class="w-1 h-1 bg-slate-200 rounded-none" />
-        </div>
+        <UPagination
+          v-if="totalRows > itemsPerPage"
+          v-model:page="page"
+          :items-per-page="itemsPerPage"
+          :total="totalRows"
+          size="xs"
+        />
       </div>
     </div>
 

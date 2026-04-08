@@ -57,6 +57,16 @@ const filteredRows = computed(() => {
   ))
 })
 
+const page = ref(1)
+const itemsPerPage = 25
+
+const pagedRows = computed(() => {
+  const start = (page.value - 1) * itemsPerPage
+  return filteredRows.value.slice(start, start + itemsPerPage)
+})
+
+const totalRows = computed(() => filteredRows.value.length)
+
 const columns: TableColumn<(typeof rows.value)[number]>[] = [
   {
     accessorKey: 'name',
@@ -247,6 +257,10 @@ watch(
 watch(isDetailOpen, (open) => {
   if (open) activeTab.value = 'profile'
 })
+
+watch([search, totalRows], () => {
+  page.value = 1
+})
 </script>
 
 <template>
@@ -266,13 +280,13 @@ watch(isDetailOpen, (open) => {
       <div class="flex items-center bg-white p-2 border border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-brand-500/20">
         <UInput v-model="search" variant="none" placeholder="Buscar operador..." icon="i-lucide-search" class="w-64 font-medium" />
         <div class="w-px h-8 bg-slate-100 mx-3" />
-        <UButton color="brand" icon="i-lucide-plus" class="px-6 font-bold" label="Nuevo Operador" @click="openCreateModal" />
+        <UButton color="brand" icon="i-lucide-plus" class="px-6 font-bold text-white bg-primary" label="Nuevo Operador" @click="openCreateModal" />
       </div>
     </header>
 
     <div class="bg-white border border-slate-200 shadow-[0_12px_40px_rgba(0,0,0,0.03)] overflow-hidden flex-1 flex flex-col">
       <UTable
-        :data="filteredRows"
+        :data="pagedRows"
         :columns="columns"
         :loading="isLoading"
         :onSelect="handleRowSelect"
@@ -284,6 +298,19 @@ watch(isDetailOpen, (open) => {
           tr: 'hover:bg-slate-50/80 transition-all'
         }"
       />
+
+      <div class="px-10 py-4 border-t border-slate-50 bg-slate-50/30 flex justify-between items-center">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          Total: {{ totalRows }} operadores
+        </p>
+        <UPagination
+          v-if="totalRows > itemsPerPage"
+          v-model:page="page"
+          :items-per-page="itemsPerPage"
+          :total="totalRows"
+          size="xs"
+        />
+      </div>
     </div>
 
     <UModal v-model:open="isCreateOpen" :portal="true" :ui="{ content: 'p-0 bg-transparent' }">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, h, onMounted, ref, resolveComponent } from 'vue'
+import { computed, h, onMounted, ref, resolveComponent, watch } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type { MaintenanceSchedule } from '#shared/types/db'
 import { useMaintenanceSchedules } from '../../composables/useMaintenanceSchedules'
@@ -46,21 +46,35 @@ const formatInterval = (value?: number | null, unit?: string) => {
 }
 
 const rows = computed(() => schedules.value.map(schedule => {
-  const flota = fleetMap.value.get(schedule.flotaId)
+  const fleet = fleetMap.value.get(schedule.flotaId)
   return {
     ...schedule,
-    flotaPlaca: flota?.placa ?? 'Sin placa'
+    flotaPlaca: fleet?.placa ?? 'Sin placa'
   }
 }))
 
 const filteredRows = computed(() => {
-  const q = search.value.trim().toLowerCase()
-  if (!q) return rows.value
+  const query = search.value.trim().toLowerCase()
+  if (!query) return rows.value
   return rows.value.filter(row =>
-    row.nombre.toLowerCase().includes(q) ||
-    row.flotaPlaca.toLowerCase().includes(q) ||
-    (row.descripcion ?? '').toLowerCase().includes(q)
+    row.nombre.toLowerCase().includes(query) ||
+    row.flotaPlaca.toLowerCase().includes(query) ||
+    (row.descripcion ?? '').toLowerCase().includes(query)
   )
+})
+
+const page = ref(1)
+const itemsPerPage = 25
+
+const pagedRows = computed(() => {
+  const start = (page.value - 1) * itemsPerPage
+  return filteredRows.value.slice(start, start + itemsPerPage)
+})
+
+const totalRows = computed(() => filteredRows.value.length)
+
+watch([search, totalRows], () => {
+  page.value = 1
 })
 
 const openCreateSchedule = () => {
@@ -146,13 +160,19 @@ const columns: TableColumn<any>[] = [
         icon: 'i-lucide-pencil',
         variant: 'ghost',
         color: 'neutral',
-        onClick: (event: Event) => { event.stopPropagation(); openEditSchedule(row.original) }
+        onClick: (event: Event) => {
+          event.stopPropagation()
+          openEditSchedule(row.original)
+        }
       }),
       h(UButton, {
         icon: 'i-lucide-trash',
         variant: 'ghost',
         color: 'error',
-        onClick: (event: Event) => { event.stopPropagation(); handleDeleteSchedule(row.original.id) }
+        onClick: (event: Event) => {
+          event.stopPropagation()
+          handleDeleteSchedule(row.original.id)
+        }
       })
     ])
   }
@@ -160,48 +180,51 @@ const columns: TableColumn<any>[] = [
 </script>
 
 <template>
-  <div class="w-full h-screen flex flex-col p-10 font-sans text-slate-900 overflow-hidden">
-    <header class="flex items-center justify-between mb-12">
+  <div class="flex h-screen w-full flex-col overflow-hidden p-10 font-sans text-slate-900">
+    <header class="mb-12 flex items-center justify-between">
       <div class="flex items-center gap-4">
         <div>
-          <h1 class="font-serif text-5xl font-bold tracking-tighter text-slate-950 leading-none">PM Schedules</h1>
-          <nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mt-3">
+          <h1 class="font-serif text-5xl font-bold leading-none tracking-tighter text-slate-950">PM Schedules</h1>
+          <nav class="mt-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
             <span>Taller y Papeles</span>
-            <UIcon name="i-lucide-chevron-right" class="w-3 h-3 opacity-30" />
+            <UIcon name="i-lucide-chevron-right" class="h-3 w-3 opacity-30" />
             <span class="text-slate-600">Mantenimientos Preventivos</span>
           </nav>
         </div>
       </div>
 
-      <div class="flex items-center gap-3 bg-white p-2 border border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-brand-500/20">
+      <div class="flex items-center gap-3 border border-slate-200 bg-white p-2 shadow-sm focus-within:ring-2 focus-within:ring-brand-500/20">
         <UInput v-model="search" variant="none" placeholder="Buscar mantenimiento..." icon="i-lucide-search" class="w-64 font-medium" />
-        <div class="w-px h-8 bg-slate-100" />
+        <div class="h-8 w-px bg-slate-100" />
         <UButton color="primary" icon="i-lucide-plus" class="px-6 font-bold" label="Nuevo" @click="openCreateSchedule" />
       </div>
     </header>
 
-    <div class="bg-white border border-slate-200 shadow-[0_12px_40px_rgba(0,0,0,0.03)] overflow-hidden flex-1 flex flex-col">
+    <div class="flex flex-1 flex-col overflow-hidden border border-slate-200 bg-white shadow-[0_12px_40px_rgba(0,0,0,0.03)]">
       <UTable
-        :data="filteredRows"
+        :data="pagedRows"
         :columns="columns"
         :loading="isLoading"
         class="flex-1"
         :ui="{
           thead: 'bg-slate-50/50',
-          th: 'text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-10 py-5',
-          td: 'px-10 py-6 border-b border-slate-50 font-sans',
-          tr: 'hover:bg-slate-50/80 transition-all'
+          th: 'px-10 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400',
+          td: 'border-b border-slate-50 px-10 py-6 font-sans',
+          tr: 'transition-all hover:bg-slate-50/80'
         }"
       />
 
-      <div class="px-10 py-4 border-t border-slate-50 bg-slate-50/30 flex justify-between items-center">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-          Total: {{ filteredRows.length }} mantenimientos
+      <div class="flex items-center justify-between border-t border-slate-50 bg-slate-50/30 px-10 py-4">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          Total: {{ totalRows }} mantenimientos
         </p>
-        <div class="flex gap-2">
-          <div class="w-1 h-1 bg-brand-500 rounded-none" />
-          <div class="w-1 h-1 bg-slate-200 rounded-none" />
-        </div>
+        <UPagination
+          v-if="totalRows > itemsPerPage"
+          v-model:page="page"
+          :items-per-page="itemsPerPage"
+          :total="totalRows"
+          size="xs"
+        />
       </div>
     </div>
 

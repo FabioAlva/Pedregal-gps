@@ -91,12 +91,17 @@ const dropdownItems = computed<DropdownMenuItem[][]>(() => [
       class="w-5 h-5 -ml-1 mr-3 text-brand-500/50 group-hover:text-brand-500 transition-all duration-300 group-hover:-translate-x-1"
     />
     <div class = "flex flex-col">
-            <h2 class="font-serif text-2xl xl:text-3xl font-bold text-brand-500 tracking-tighter leading-none">
+            <!-- <h2 class="font-serif text-2xl xl:text-3xl font-bold text-brand-500 tracking-tighter leading-none">
               Pedregal
             </h2>
             <p class="font-serif italic font-medium text-brand-500 text-[10px] lowercase opacity-80 mt-1 ml-0.5 tracking-tight">
               the fruit company
-            </p>
+            </p> -->
+              <img 
+            src="/images/Logo-Pedregal-rojo-1.webp" 
+            alt="P" 
+            class=" w-full h-15 z-9999 object-contain "
+          />
             </div>
           </div>
  </div>

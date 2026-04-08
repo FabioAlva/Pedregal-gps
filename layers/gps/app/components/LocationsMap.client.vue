@@ -305,9 +305,9 @@ watch(() => boundaryCoords, () => {
       layer-type="base"
     />
     <template
-      v-for="z in geofences as Geofence[]"
+      v-for="z in geofences"
       :key="z.id"
-    >
+>
       <LCircle
         v-if="z.tipo === 'circle' && getGeofenceCenter(z)"
         :lat-lng="getGeofenceCenter(z) as [number, number]"

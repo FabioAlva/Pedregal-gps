@@ -37,6 +37,16 @@ const displayedAssignments = computed(() => {
     .sort((a, b) => (!a.fechaRetiro && b.fechaRetiro ? -1 : 1))
 })
 
+const page = ref(1)
+const itemsPerPage = 25
+
+const pagedAssignments = computed(() => {
+  const start = (page.value - 1) * itemsPerPage
+  return displayedAssignments.value.slice(start, start + itemsPerPage)
+})
+
+const totalAssignments = computed(() => displayedAssignments.value.length)
+
 const refreshData = async (force = false) => {
   if (assignmentView.value === 'active') await fetchActiveAssignments(force)
   else await fetchAssignments(force)
@@ -49,6 +59,9 @@ onMounted(() => {
 })
 
 watch(assignmentView, () => refreshData(true))
+watch([plateFilter, assignmentView, totalAssignments], () => {
+  page.value = 1
+})
 
 // --- ACCIONES ---
 const plateFilter = ref('')
@@ -178,10 +191,25 @@ const columns: TableColumn<Assignment>[] = [
         <div v-if="isLoadingAssignments" class="absolute inset-0 bg-background/50 flex items-center justify-center z-10 backdrop-blur-sm">
            <div class="w-6 h-6 border-2 border-t-primary rounded-none animate-spin" />
         </div>
-        
-        <div class="h-full overflow-auto custom-scrollbar">
-          <UTable :data="displayedAssignments" :columns="columns" class="w-full"
-            :ui="{ th: 'p-4 text-[10px] font-black text-muted uppercase tracking-widest', td: 'p-4' }" />
+
+        <div class="flex flex-col h-full">
+          <div class="flex-1 overflow-auto custom-scrollbar">
+            <UTable :data="pagedAssignments" :columns="columns" class="w-full"
+              :ui="{ th: 'p-4 text-[10px] font-black text-muted uppercase tracking-widest', td: 'p-4' }" />
+          </div>
+
+          <div class="px-6 py-3 border-t border-default bg-default/30 flex items-center justify-between">
+            <span class="text-[10px] font-black uppercase tracking-widest text-muted">
+              Total: {{ totalAssignments }} asignaciones
+            </span>
+            <UPagination
+              v-if="totalAssignments > itemsPerPage"
+              v-model:page="page"
+              :items-per-page="itemsPerPage"
+              :total="totalAssignments"
+              size="xs"
+            />
+          </div>
         </div>
       </div>
     </main>

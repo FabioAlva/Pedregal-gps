@@ -54,7 +54,8 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     ['@nuxthub/core', { db: 'postgresql' }],
     '@nuxtjs/leaflet',
-    'nuxt-echarts'
+    'nuxt-echarts',
+    '@nuxt/eslint'
   ],
   ui: {
     theme: {

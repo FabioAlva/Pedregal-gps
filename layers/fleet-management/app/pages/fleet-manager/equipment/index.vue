@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, onMounted, ref, resolveComponent } from 'vue'
+import { computed, h, onMounted, ref, resolveComponent, watch } from 'vue'
 import type { Equipment } from '~~/shared/types/db'
 import type { TableColumn } from '@nuxt/ui'
 import { useEquipment } from '../../../composable/useEquipment'
@@ -90,6 +90,31 @@ const onAssignSaved = async (payload: { flotaId: number, equipoId: number }) => 
   }
 }
 
+const filteredEquipments = computed(() => {
+  const q = globalFilter.value.trim().toLowerCase()
+  if (!q) return equipments.value ?? []
+  return (equipments.value ?? []).filter(item => {
+    const name = (item.nombre ?? '').toLowerCase()
+    const model = (item.modelo ?? '').toLowerCase()
+    const code = (item.codigo ?? '').toLowerCase()
+    return name.includes(q) || model.includes(q) || code.includes(q)
+  })
+})
+
+const page = ref(1)
+const itemsPerPage = 20
+
+const pagedEquipments = computed(() => {
+  const start = (page.value - 1) * itemsPerPage
+  return filteredEquipments.value.slice(start, start + itemsPerPage)
+})
+
+const totalEquipments = computed(() => filteredEquipments.value.length)
+
+watch([globalFilter, totalEquipments], () => {
+  page.value = 1
+})
+
 // --- TABLA ---
 const columns: TableColumn<Equipment>[] = [
   { 
@@ -171,7 +196,7 @@ const columns: TableColumn<Equipment>[] = [
         <UButton 
           color="brand" 
           icon="i-lucide-plus" 
-          class="px-6 font-bold"
+          class="px-6 font-bold text-white bg-primary"
           label="Nuevo Equipo"
           @click="openModal()"
         />
@@ -180,8 +205,7 @@ const columns: TableColumn<Equipment>[] = [
 
     <div class="bg-white border border-slate-200 shadow-[0_12px_40px_rgba(0,0,0,0.03)] overflow-hidden flex-1 flex flex-col">
       <UTable
-        v-model:global-filter="globalFilter"
-        :data="equipments ?? []"
+        :data="pagedEquipments"
         :columns="columns"
         :loading="isLoading"
         @select="openDetail"
@@ -203,12 +227,15 @@ const columns: TableColumn<Equipment>[] = [
       
       <div class="px-10 py-4 border-t border-slate-50 bg-slate-50/30 flex justify-between items-center">
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-          Total: {{ equipments?.length ?? 0 }} unidades registradas
+          Total: {{ totalEquipments }} unidades registradas
         </p>
-        <div class="flex gap-2">
-          <div class="w-1 h-1 bg-brand-500 rounded-none" />
-          <div class="w-1 h-1 bg-slate-200 rounded-none" />
-        </div>
+        <UPagination
+          v-if="totalEquipments > itemsPerPage"
+          v-model:page="page"
+          :items-per-page="itemsPerPage"
+          :total="totalEquipments"
+          size="xs"
+        />
       </div>
     </div>
 

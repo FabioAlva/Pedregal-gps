@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import FilterComponent from '#layers/gps/app/components/FilterComponent.vue'
 import useFilter from '#layers/gps/app/composables/useFilter'
 import { useAreaStays } from '#layers/gps/app/composables/useAreaStays'
@@ -21,6 +21,20 @@ const formatDuration = (seconds: number) => {
 
   return `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`
 }
+
+const page = ref(1)
+const itemsPerPage = 25
+
+const pagedRows = computed(() => {
+  const start = (page.value - 1) * itemsPerPage
+  return rows.value.slice(start, start + itemsPerPage)
+})
+
+const totalRows = computed(() => rows.value.length)
+
+watch([selectedZone, totalRows], () => {
+  page.value = 1
+})
 
 onMounted(async () => {
   await fetchDevices()
@@ -111,7 +125,7 @@ onMounted(async () => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="stay in rows" :key="stay.id" class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+            <tr v-for="stay in pagedRows" :key="stay.id" class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
               <td class="px-10 py-6 font-semibold text-slate-950">{{ stay.geofenceName }}</td>
               <td class="px-10 py-6 font-mono text-xs text-slate-600">{{ stay.deviceId }}</td>
               <td class="px-10 py-6">{{ formatDateValue(stay.enteredAt) }}</td>
@@ -120,6 +134,19 @@ onMounted(async () => {
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <div class="px-10 py-4 border-t border-slate-50 bg-slate-50/30 flex justify-between items-center">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          Total: {{ totalRows }} registros
+        </p>
+        <UPagination
+          v-if="totalRows > itemsPerPage"
+          v-model:page="page"
+          :items-per-page="itemsPerPage"
+          :total="totalRows"
+          size="xs"
+        />
       </div>
     </div>
   </div>

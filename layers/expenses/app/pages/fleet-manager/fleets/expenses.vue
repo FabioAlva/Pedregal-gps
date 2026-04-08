@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, h, onMounted, ref, resolveComponent } from 'vue'
+import { computed, h, onMounted, ref, resolveComponent, watch } from 'vue'
 import type { TableColumn, TableRow } from '@nuxt/ui'
 import type { FleetExpense } from '~~/shared/types/db'
 import { useExpenses } from '../../../composables/useExpenses'
@@ -88,6 +88,20 @@ const filteredRows = computed(() => {
     String(row.monto).includes(q) ||
     (row.descripcion ?? '').toLowerCase().includes(q)
   )
+})
+
+const page = ref(1)
+const itemsPerPage = 25
+
+const pagedRows = computed(() => {
+  const start = (page.value - 1) * itemsPerPage
+  return filteredRows.value.slice(start, start + itemsPerPage)
+})
+
+const totalRows = computed(() => filteredRows.value.length)
+
+watch([search, totalRows], () => {
+  page.value = 1
 })
 
 const columns: TableColumn<any>[] = [
@@ -220,13 +234,13 @@ const handleDeleteCategory = async (id: number) => {
         <UInput v-model="search" variant="none" placeholder="Buscar gasto..." icon="i-lucide-search" class="w-64 font-medium" />
         <div class="w-px h-8 bg-slate-100" />
         <UButton color="slate" variant="subtle" icon="i-lucide-tags" class="px-5 font-bold" label="Categorias" @click="isCategoryModalOpen = true" />
-        <UButton color="brand" icon="i-lucide-plus" class="px-6 font-bold" label="Nuevo gasto" @click="openCreateExpense" />
+        <UButton color="brand" icon="i-lucide-plus" class="px-6 font-bold bg-primary text-white" label="Nuevo gasto" @click="openCreateExpense" />
       </div>
     </header>
 
     <div class="bg-white border border-slate-200 shadow-[0_12px_40px_rgba(0,0,0,0.03)] overflow-hidden flex-1 flex flex-col">
       <UTable
-        :data="filteredRows"
+        :data="pagedRows"
         :columns="columns"
         :loading="isLoading || isLoadingCategories"
         @select="onSelectRow"
@@ -241,12 +255,15 @@ const handleDeleteCategory = async (id: number) => {
 
       <div class="px-10 py-4 border-t border-slate-50 bg-slate-50/30 flex justify-between items-center">
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-          Total: {{ filteredRows.length }} gastos registrados
+          Total: {{ totalRows }} gastos registrados
         </p>
-        <div class="flex gap-2">
-          <div class="w-1 h-1 bg-brand-500 rounded-none" />
-          <div class="w-1 h-1 bg-slate-200 rounded-none" />
-        </div>
+        <UPagination
+          v-if="totalRows > itemsPerPage"
+          v-model:page="page"
+          :items-per-page="itemsPerPage"
+          :total="totalRows"
+          size="xs"
+        />
       </div>
     </div>
 

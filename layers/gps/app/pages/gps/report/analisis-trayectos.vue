@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import FilterComponent from '#layers/gps/app/components/FilterComponent.vue'
 import { useRouteAnalysisView } from '#layers/gps/app/composables/useRouteAnalysisView'
 import { formatLocalDate } from '#layers/gps/app/utils/FormatTime'
@@ -23,6 +23,20 @@ const {
   trendBucketLabel,
   initialize
 } = useRouteAnalysisView()
+
+const detailPage = ref(1)
+const detailItemsPerPage = 50
+
+const pagedRows = computed(() => {
+  const start = (detailPage.value - 1) * detailItemsPerPage
+  return rowsPreview.value.slice(start, start + detailItemsPerPage)
+})
+
+const totalRows = computed(() => rowsPreview.value.length)
+
+watch([rowsPreview, showDetailTable], () => {
+  detailPage.value = 1
+})
 
 onMounted(async () => {
   await initialize()
@@ -157,7 +171,7 @@ onMounted(async () => {
           <div class="flex items-center justify-between">
             <span class="text-sm font-semibold text-highlighted">Detalle de trayectos entre puntos GPS</span>
             <div class="flex items-center gap-3">
-              <span class="text-xs text-muted">Mostrando {{ rowsPreview.length }} de {{ rows.length }} segmentos</span>
+              <span class="text-xs text-muted">Mostrando {{ totalRows }} de {{ rows.length }} segmentos</span>
               <UButton
                 size="xs"
                 variant="soft"
@@ -197,7 +211,7 @@ onMounted(async () => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in rowsPreview" :key="row.id" class="border-b border-default/60">
+              <tr v-for="row in pagedRows" :key="row.id" class="border-b border-default/60">
                 <td class="py-3 pr-4 font-mono text-xs">
                   <div class="flex items-center gap-2 mb-1">
                     <span class="w-2 h-2 rounded-full" :style="{ background: row.deviceColor }" />
@@ -215,6 +229,19 @@ onMounted(async () => {
               </tr>
             </tbody>
           </table>
+
+          <div class="mt-4 flex items-center justify-between">
+            <span class="text-[10px] font-black uppercase tracking-widest text-muted">
+              Total: {{ totalRows }} segmentos
+            </span>
+            <UPagination
+              v-if="totalRows > detailItemsPerPage"
+              v-model:page="detailPage"
+              :items-per-page="detailItemsPerPage"
+              :total="totalRows"
+              size="xs"
+            />
+          </div>
         </div>
       </UCard>
     </div>

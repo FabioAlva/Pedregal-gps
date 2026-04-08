@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h } from 'vue'
+import { computed, h, watch } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type { GpsAlertLog } from '~~/shared/types/db'
 
@@ -9,6 +9,31 @@ const globalFilter = ref('')
 
 const formatDate = (d: string | Date) =>
   new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(d))
+
+const page = ref(1)
+const itemsPerPage = 25
+
+const filteredLogs = computed(() => {
+  const q = globalFilter.value.trim().toLowerCase()
+  if (!q) return logs.value ?? []
+  return (logs.value ?? []).filter(log => (
+    String(log.id).includes(q) ||
+    String(log.alertaId).includes(q) ||
+    String(log.fleetEquipmentId).includes(q) ||
+    String(log.valorRegistrado).includes(q)
+  ))
+})
+
+const pagedLogs = computed(() => {
+  const start = (page.value - 1) * itemsPerPage
+  return filteredLogs.value.slice(start, start + itemsPerPage)
+})
+
+const totalLogs = computed(() => filteredLogs.value.length)
+
+watch([globalFilter, totalLogs], () => {
+  page.value = 1
+})
 
 // --- DEFINICIÓN DE COLUMNAS (Estilo Técnico) ---
 const columns: TableColumn<GpsAlertLog>[] = [
@@ -101,24 +126,38 @@ onMounted(fetchAll)
     </div>
 
     <main class="flex-1 overflow-hidden relative bg-background">
-      <div class="h-full overflow-auto custom-scrollbar">
-      <UTable
-        v-model:global-filter="globalFilter"
-        :data="logs ?? []"
-        :columns="columns"
-        :loading="loading"
-        class="w-full border-collapse"
-        :ui="{ 
-          thead: 'sticky top-0 z-20 bg-elevated/95 backdrop-blur-md border-b border-default',
-          tr: 'hover:bg-primary/5 transition-colors group border-b border-default/50',
-          th: 'p-4 text-[10px] font-black text-muted uppercase tracking-widest text-left',
-          td: 'p-4'
-        }"
-      />
+      <div class="flex flex-col h-full">
+        <div class="flex-1 overflow-auto custom-scrollbar">
+          <UTable
+            :data="pagedLogs"
+            :columns="columns"
+            :loading="loading"
+            class="w-full border-collapse"
+            :ui="{ 
+              thead: 'sticky top-0 z-20 bg-elevated/95 backdrop-blur-md border-b border-default',
+              tr: 'hover:bg-primary/5 transition-colors group border-b border-default/50',
+              th: 'p-4 text-[10px] font-black text-muted uppercase tracking-widest text-left',
+              td: 'p-4'
+            }"
+          />
 
-        <div v-if="!loading && logs?.length === 0" class="py-32 flex flex-col items-center justify-center text-muted opacity-40">
-          <UIcon name="i-lucide-database-zap" class="w-12 h-12 mb-4" />
-          <p class="text-[10px] font-black uppercase tracking-[0.3em]">No se encontraron registros</p>
+          <div v-if="!loading && totalLogs === 0" class="py-32 flex flex-col items-center justify-center text-muted opacity-40">
+            <UIcon name="i-lucide-database-zap" class="w-12 h-12 mb-4" />
+            <p class="text-[10px] font-black uppercase tracking-[0.3em]">No se encontraron registros</p>
+          </div>
+        </div>
+
+        <div class="px-6 py-3 border-t border-default bg-default/30 flex items-center justify-between">
+          <span class="text-[10px] font-black uppercase tracking-widest text-muted">
+            Total: {{ totalLogs }} registros
+          </span>
+          <UPagination
+            v-if="totalLogs > itemsPerPage"
+            v-model:page="page"
+            :items-per-page="itemsPerPage"
+            :total="totalLogs"
+            size="xs"
+          />
         </div>
       </div>
     </main>

@@ -57,6 +57,20 @@ watch(isFleetModalOpen, (open) => {
   if (!open) editingFleet.value = null
 })
 
+const page = ref(1)
+const itemsPerPage = 20
+
+const pagedFleets = computed(() => {
+  const start = (page.value - 1) * itemsPerPage
+  return (fleets.value ?? []).slice(start, start + itemsPerPage)
+})
+
+const totalFleets = computed(() => (fleets.value ?? []).length)
+
+watch(totalFleets, () => {
+  page.value = 1
+})
+
 // 2. COLUMNAS UTABLE V4 (Placa Sans para lectura fácil)
 const columns: TableColumn<any>[] = [
   {
@@ -142,13 +156,13 @@ const onSelectRow = (e: any, row: TableRow<any>) => {
       <div class="flex items-center bg-white p-2 border border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-brand-500/20">
         <UInput variant="none" placeholder="Buscar placa..." icon="i-lucide-search" class="w-64 font-medium" />
         <div class="w-px h-8 bg-slate-100 mx-3" />
-        <UButton color="brand" icon="i-lucide-plus" class="px-6 font-bold" label="Nueva Unidad" @click="openCreateFleet" />
+        <UButton color="brand" icon="i-lucide-plus" class="px-6 font-bold bg-primary text-white" label="Nueva Unidad" @click="openCreateFleet" />
       </div>
     </header>
 
     <div class="bg-white border border-slate-200 shadow-[0_12px_40px_rgba(0,0,0,0.03)] overflow-hidden flex-1 flex flex-col">
       <UTable
-        :data="fleets"
+        :data="pagedFleets"
         :columns="columns"
         :loading="isLoading"
         @select="onSelectRow"
@@ -160,6 +174,19 @@ const onSelectRow = (e: any, row: TableRow<any>) => {
           tr: 'hover:bg-slate-50/80 transition-all'
         }"
       />
+
+      <div class="px-10 py-4 border-t border-slate-50 bg-slate-50/30 flex justify-between items-center">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          Total: {{ totalFleets }} unidades
+        </p>
+        <UPagination
+          v-if="totalFleets > itemsPerPage"
+          v-model:page="page"
+          :items-per-page="itemsPerPage"
+          :total="totalFleets"
+          size="xs"
+        />
+      </div>
     </div>
 
     <FleetDetailDrawer v-model="isDrawerOpen" :vehicle="selectedVehicle" />

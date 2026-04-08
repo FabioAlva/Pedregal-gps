@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, onMounted, ref, resolveComponent } from 'vue'
+import { computed, h, onMounted, ref, resolveComponent, watch } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type { GpsAlert } from '~~/shared/types/db'
 
@@ -35,6 +35,29 @@ const handleToggle = async (alert: GpsAlert) => {
 
 const formatDate = (d: string | Date) =>
   new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(d))
+
+const page = ref(1)
+const itemsPerPage = 20
+
+const filteredAlerts = computed(() => {
+  const q = globalFilter.value.trim().toLowerCase()
+  if (!q) return alerts.value ?? []
+  return (alerts.value ?? []).filter(alert =>
+    String(alert.id).includes(q) ||
+    alert.descripcion.toLowerCase().includes(q)
+  )
+})
+
+const pagedAlerts = computed(() => {
+  const start = (page.value - 1) * itemsPerPage
+  return filteredAlerts.value.slice(start, start + itemsPerPage)
+})
+
+const totalAlerts = computed(() => filteredAlerts.value.length)
+
+watch([globalFilter, totalAlerts], () => {
+  page.value = 1
+})
 
 // --- COLUMNAS CON ESTILO HOMOGÉNEO ---
 const columns: TableColumn<GpsAlert>[] = [
@@ -141,10 +164,10 @@ onMounted(fetchAll)
     </div>
 
     <main class="flex-1 overflow-hidden relative bg-background">
-      <div class="h-full overflow-auto custom-scrollbar">
+      <div class="flex flex-col h-full">
+        <div class="flex-1 overflow-auto custom-scrollbar">
         <UTable
-          v-model:global-filter="globalFilter"
-          :data="alerts ?? []"
+          :data="pagedAlerts"
           :columns="columns"
           :loading="loading || saving"
           class="w-full border-collapse"
@@ -156,9 +179,23 @@ onMounted(fetchAll)
           }"
         />
 
-        <div v-if="!loading && alerts?.length === 0" class="py-32 flex flex-col items-center justify-center text-muted opacity-40">
-          <UIcon name="i-lucide-bell-off" class="w-12 h-12 mb-4" />
-          <p class="text-[10px] font-black uppercase tracking-[0.3em]">No hay alertas configuradas</p>
+          <div v-if="!loading && totalAlerts === 0" class="py-32 flex flex-col items-center justify-center text-muted opacity-40">
+            <UIcon name="i-lucide-bell-off" class="w-12 h-12 mb-4" />
+            <p class="text-[10px] font-black uppercase tracking-[0.3em]">No hay alertas configuradas</p>
+          </div>
+        </div>
+
+        <div class="px-6 py-3 border-t border-default bg-default/30 flex items-center justify-between">
+          <span class="text-[10px] font-black uppercase tracking-widest text-muted">
+            Total: {{ totalAlerts }} reglas
+          </span>
+          <UPagination
+            v-if="totalAlerts > itemsPerPage"
+            v-model:page="page"
+            :items-per-page="itemsPerPage"
+            :total="totalAlerts"
+            size="xs"
+          />
         </div>
       </div>
     </main>

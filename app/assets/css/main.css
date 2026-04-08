@@ -2,7 +2,7 @@
 @import "@nuxt/ui";
 @theme static {
   /* FUENTES */
-  --font-sans: 'Geist', ui-sans-serif, system-ui;
+  --font-sans:  'Noto Serif','Geist', ui-sans-serif, system-ui;
   --font-serif: 'Playfair Display', serif;
 
   /* BRAND (primary) — #e1261c */
