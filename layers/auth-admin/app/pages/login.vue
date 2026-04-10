@@ -36,12 +36,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       </p>
       
       <div class="space-y-1">
-        <h2 class="font-serif text-5xl xl:text-6xl font-bold text-brand-500 tracking-tighter leading-[0.75]">
-          Pedregal
-        </h2>
-        <p class="font-serif italic font-medium text-brand-500 text-xl lowercase opacity-90 ml-1 tracking-tight">
-    the fruit company
-  </p>
+         <img 
+            src="/images/Logo-Pedregal-rojo-1.webp" 
+            alt="P" 
+            class=" w-auto h-20 object-contain "
+          />
       </div>
       
       <div class="mt-4 h-[2px] w-10 bg-brand-500" />

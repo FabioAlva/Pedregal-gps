@@ -7,16 +7,14 @@ const navigationNav: NavigationMenuItem[][] = [
   [
     { 
       label: 'Dashboard', 
-      icon: 'i-lucide-layout-dashboard', 
-      to: '/dashboard',
-      description: 'Resumen de indicadores clave y estado global de la operación.'
+      icon: 'i-lucide-layout-grid', 
+      to: '/dashboard'
     },
     { 
       label: 'Telemetría en Vivo', 
-      icon: 'i-lucide-map-pin', 
+      icon: 'i-lucide-radar', 
       to: '/gps', 
-      badge: 'GPS',
-      description: 'Seguimiento en tiempo real de la ubicación de todas las unidades.'
+      badge: 'GPS'
     },
   ],
 
@@ -27,66 +25,69 @@ const navigationNav: NavigationMenuItem[][] = [
       icon: 'i-lucide-tractor',
       defaultOpen: true,
       children: [
-        { label: 'Maquinaria y Vehículos', to: '/fleet-manager/fleets/list', description: 'Inventario detallado de tractores, camiones y camionetas.' },
-        { label: 'Gastos Asociados', to: '/fleet-manager/fleets/expenses', description: 'Historial de costos, reparaciones y facturas por unidad.' },
-        { label: 'Implementos', to: '/fleet-manager/fleets/implements', description: 'Gestión de arados, rastras y equipos acoplables.' },
-        { label: 'Equipos GPS e IoT', to: '/fleet-manager/equipment', description: 'Control de dispositivos de rastreo y sensores instalados.' },
-        { label: 'Estadias por Area', to: '/gps/area-stays', description: 'Reporte de ingresos, salidas y tiempos de permanencia por zona.' },
+        // 'Zap' sugiere energía/maquinaria activa, 'settings' precisión técnica
+        { label: 'Maquinaria y Vehículos', to: '/fleet-manager/fleets/list', icon: 'i-lucide-settings' },
+        { label: 'Gastos Asociados', to: '/fleet-manager/fleets/expenses', icon: 'i-lucide-banknote' },
+        { label: 'Implementos', to: '/fleet-manager/fleets/implements', icon: 'i-lucide-combine' }, // Icono de cosechadora/maquinaria
+        { label: 'Equipos GPS e IoT', to: '/fleet-manager/equipment', icon: 'i-lucide-cpu' },
+        { label: 'Estadias por Area', to: '/gps/area-stays', icon: 'i-lucide-timer' },
       ],
     },
-      {
+    {
       label: 'Capital Humano',
-      icon: 'i-lucide-user-check',
+      icon: 'i-lucide-contact-2',
       children: [
-        { label: 'Padrón de Operadores', to: '/operators/list', description: 'Directorio del personal conductor y técnico.' },
-        { label: 'Asignaciones', to: '/operators/shifts', description: 'Asignaciones de operadores a unidades y turnos.' },
+        { label: 'Padrón de Operadores', to: '/operators/list', icon: 'i-lucide-id-card' },
+        { label: 'Asignaciones', to: '/operators/shifts', icon: 'i-lucide-user-cog' },
       ],
     },
     {
       label: 'Zonas y Campos',
-      icon: 'i-lucide-map',
-      to: '/gps/geo/zones',
-      description: 'Delimitación geográfica de las zonas de cultivo.',
+      icon: 'i-lucide-sprout',
+      defaultOpen: true,
+      children: [
+        { label: 'Configuración Geográfica', to: '/gps/geo/zones', icon: 'i-lucide-map-pinned' },
+        { label: 'Lista de Campos', to: '/gps/geo/fields-list', icon: 'i-lucide-layers-3' },
+      ],
     },
   ],
 
-  // ─── 3. OPERACIONES Y PERSONAL ──────────────────────────────
+  // ─── 3. OPERACIONES ──────────────────────────────
   [
     {
       label: 'Inspecciones (DVIR)',
       icon: 'i-lucide-clipboard-check',
       children: [
-        { label: 'Checklist Diario', to: '/inspections/dvir', description: 'Revisión obligatoria de seguridad antes de cada jornada.' },
-        { label: 'Historial de Revisiones', to: '/inspections/history', description: 'Archivo de todas las inspecciones pasadas realizadas.' },
+        { label: 'Checklist Diario', to: '/inspections/dvir', icon: 'i-lucide-check-circle-2' },
+        { label: 'Historial de Revisiones', to: '/inspections/history', icon: 'i-lucide-file-search' },
       ],
     },
-  
   ],
 
-  // ─── 4. TALLER Y PAPELEO ──────────────────────────────
+  // ─── 4. TALLER ──────────────────────────────
   [
     {
       label: 'Taller y Reparaciones',
       icon: 'i-lucide-wrench',
       children: [
-        { label: 'Reparaciones Activas', to: '/work-orders/open', description: 'Trabajos mecánicos que se están realizando actualmente.' },
-        { label: 'Mantenimientos Programados', to: '/pm/schedules', description: 'Servicios preventivos planeados para evitar averías.' },
-        { label: 'Almacén de Repuestos', to: '/inventory/parts', description: 'Control de stock de aceites, filtros y piezas críticas.' },
+        { label: 'Reparaciones Activas', to: '/work-orders/open', icon: 'i-lucide-hammer' },
+        { label: 'Mantenimientos Programados', to: '/pm/schedules', icon: 'i-lucide-calendar-range' },
+        { label: 'Almacén de Repuestos', to: '/inventory/parts', icon: 'i-lucide-package-search' },
       ],
     },
   ],
 
-  // ─── 5. SEGURIDAD Y COSTOS ENERGÉTICOS ──────────────────────
+  // ─── 5. SEGURIDAD ──────────────────────
   [
     {
       label: 'Centro de Alertas',
-      icon: 'i-lucide-bell-ring',
+      icon: 'i-lucide-shield-alert',
       badge: '12',
       children: [
-        { label: 'Alertas de Combustible', to: '/alerts/fuel', description: 'Detección de caídas bruscas o posibles robos de diésel.' },
-        { label: 'Alertas de Conducción', to: '/alerts/driving', description: 'Excesos de velocidad, frenados bruscos o ralentí excesivo.' },
-        { label: 'Alertas Perimetrales', to: '/alerts/geofence', description: 'Notificaciones de entrada o salida de zonas no autorizadas.' },
-        { label: 'Botón de Pánico / SOS', to: '/alerts/emergency', description: 'Atención inmediata a emergencias reportadas desde cabina.' },
+        { label: 'Alertas de Combustible', to: '/alerts/fuel', icon: 'i-lucide-fuel' },
+        { label: 'Alertas de Conducción', to: '/alerts/driving', icon: 'i-lucide-gauge' },
+        { label: 'Alertas Perimetrales', to: '/alerts/fence', icon: 'i-lucide-map-off' },
+        { label: 'Botón de Pánico / SOS', to: '/alerts/emergency', icon: 'i-lucide-siren' },
       ],
     },
   ],
@@ -95,9 +96,8 @@ const navigationNav: NavigationMenuItem[][] = [
   [
     { 
       label: 'Ajustes del Sistema', 
-      icon: 'i-lucide-settings-2', 
+      icon: 'i-lucide-sliders-horizontal', 
       to: '/settings/company',
-      description: 'Configuración de perfiles, permisos y datos de la empresa.'
     },
   ],
 ]

@@ -8,6 +8,8 @@ export const cacheMaxAge = {
   fleetsBasic: 60,
   geofenceList: 120,
   geofenceStaysReport: 60,
+  fieldsList: 120,
+  fieldStaysReport: 60,
   gpsAlerts: 30,
   gpsAlertLogs: 30,
   equipmentList: 60,

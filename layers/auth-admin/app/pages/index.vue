@@ -26,10 +26,13 @@ const resolveRedirect = async () => {
   const map = await getNavigationMap();
   console.log('[INDEX] navigation map size', map.length)
   console.log('[INDEX] navigation map ids', map.map(route => route.id))
-  const firstAllowed = map.find(route => canUserView(permissionsState.value, route.id));
-  console.log('[INDEX] firstAllowed', firstAllowed)
+  const gpsRoute = map.find(route => route.url === '/gps')
+  const preferred = gpsRoute && canUserView(permissionsState.value, gpsRoute.id)
+    ? gpsRoute
+    : map.find(route => canUserView(permissionsState.value, route.id));
+  console.log('[INDEX] preferredRoute', preferred)
 
-  await navigateTo(firstAllowed?.url || '/login', { replace: true });
+  await navigateTo(preferred?.url || '/login', { replace: true });
 };
 
 if (import.meta.client) {

@@ -7,6 +7,7 @@ export interface MapRoutePoint {
       sp: number
       ang: number
       alt: number
+      239?: number
     }
   }
 };

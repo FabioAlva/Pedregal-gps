@@ -6,6 +6,7 @@ export interface PointData {
       ts: number
       sp: number
       ang: number
+      239?: number
       alt: number
     }
   }
@@ -15,10 +16,11 @@ export interface PointData {
 export type ProcessedRoute = {
   id: string
   points: [number, number][]
+  rawPoints: Array<{ lat: number; lng: number; ignition?: number }>
   name: string
   color: string
   speed: number
-  status: 'online' | 'offline'
+  status: 'encendido' | 'apagado' | 'sin-senal'
   stopTime: number
   maxSpeed: number
   avgSpeed: number

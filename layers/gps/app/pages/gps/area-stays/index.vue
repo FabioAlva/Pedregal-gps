@@ -6,7 +6,7 @@ import { useAreaStays } from '#layers/gps/app/composables/useAreaStays'
 import { formatLocalDate } from '#layers/gps/app/utils/FormatTime'
 
 const { fetchDevices } = useFilter()
-const { isLoading, report, errorMessage, selectedZone, zoneOptions, rows, fetchAreaStays } = useAreaStays()
+const { isLoading, report, errorMessage, selectedField, fieldOptions, rows, fetchAreaStays } = useAreaStays()
 
 const formatDateValue = (value?: string | null) => {
   if (!value) return 'Vigente'
@@ -32,7 +32,7 @@ const pagedRows = computed(() => {
 
 const totalRows = computed(() => rows.value.length)
 
-watch([selectedZone, totalRows], () => {
+watch([selectedField, totalRows], () => {
   page.value = 1
 })
 
@@ -43,20 +43,16 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="w-full h-screen flex flex-col p-10 font-sans text-slate-900 overflow-hidden">
-    <header class="flex items-center justify-between mb-8">
-      <div class="flex items-center gap-4">
-        <div>
-          <h1 class="font-serif text-5xl font-bold tracking-tighter text-slate-950 leading-none">Estadias por Area</h1>
-          <nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mt-3">
-            <span>Flota Agricola</span>
-            <UIcon name="i-lucide-chevron-right" class="w-3 h-3 opacity-30" />
-            <span class="text-slate-600">Estadias por Area</span>
-          </nav>
-        </div>
+<div class="w-full flex flex-col font-sans text-slate-900 overflow-hidden h-full">
+  <header class="flex flex-col w-full mb-6 shrink-0">
+      <div class="pb-3 pl-1">
+        <nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
+          <span>Flota Agrícola</span>
+          <UIcon name="i-lucide-chevron-right" class="w-3 h-3 opacity-40" />
+          <span class="text-slate-900">Estadías por Campo</span>
+        </nav>
       </div>
     </header>
-
     <div class="bg-white border border-slate-200 shadow-sm mb-6 overflow-hidden">
       <FilterComponent :on-search="fetchAreaStays" />
     </div>
@@ -89,17 +85,17 @@ onMounted(async () => {
       <div class="px-10 py-6 border-b border-slate-100 flex items-center justify-between">
         <div>
           <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Detalle</p>
-          <h2 class="text-lg font-bold text-slate-950">Estadias por Zona</h2>
+          <h2 class="text-lg font-bold text-slate-950">Estadias por Campo</h2>
         </div>
         <div class="flex items-center gap-3">
           <USelectMenu
-            v-model="selectedZone"
-            :items="zoneOptions"
+            v-model="selectedField"
+            :items="fieldOptions"
             value-key="value"
             label-key="label"
             size="xs"
             class="w-56"
-            placeholder="Filtrar por zona"
+            placeholder="Filtrar por campo"
           />
           <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ rows.length }} registros</span>
         </div>
@@ -117,7 +113,7 @@ onMounted(async () => {
         <table class="w-full text-sm">
           <thead class="bg-slate-50/50">
             <tr class="text-left">
-              <th class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-10 py-5">Area</th>
+              <th class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-10 py-5">Campo</th>
               <th class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-10 py-5">GPS</th>
               <th class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-10 py-5">Ingreso</th>
               <th class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-10 py-5">Salida</th>
@@ -126,7 +122,7 @@ onMounted(async () => {
           </thead>
           <tbody>
             <tr v-for="stay in pagedRows" :key="stay.id" class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-              <td class="px-10 py-6 font-semibold text-slate-950">{{ stay.geofenceName }}</td>
+              <td class="px-10 py-6 font-semibold text-slate-950">{{ stay.fieldName }}</td>
               <td class="px-10 py-6 font-mono text-xs text-slate-600">{{ stay.deviceId }}</td>
               <td class="px-10 py-6">{{ formatDateValue(stay.enteredAt) }}</td>
               <td class="px-10 py-6">{{ formatDateValue(stay.exitedAt) }}</td>
@@ -151,3 +147,4 @@ onMounted(async () => {
     </div>
   </div>
 </template>
+

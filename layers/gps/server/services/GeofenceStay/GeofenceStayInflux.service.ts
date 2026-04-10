@@ -7,7 +7,7 @@ import type {
   GeofenceStayReportItem,
   GeofenceStayReportParams,
   GeofenceStayReportResult,
-  OpenStayState,
+  GeofenceOpenStayState,
   TelemetryPoint
 } from '../../schemas/IGeofenceStayReport'
 
@@ -33,7 +33,7 @@ export class GeofenceStayInfluxService {
    * Calcula duracion y guarda coordenadas de entrada/salida.
    */
 
-  private appendClosedStayEvent(stays: GeofenceStayReportItem[], seqId: number, open: OpenStayState, point: TelemetryPoint) {
+  private appendClosedStayEvent(stays: GeofenceStayReportItem[], seqId: number, open: GeofenceOpenStayState, point: TelemetryPoint) {
     const durationSeconds = Math.max(0, Math.floor((point.time.getTime() - open.enteredAt.getTime()) / 1000))
     stays.push({
       id: seqId,
@@ -57,7 +57,7 @@ export class GeofenceStayInfluxService {
    * En este caso no existe salida ni duracion cerrada.
    */
 
-  private appendOpenStayEvent(stays: GeofenceStayReportItem[], seqId: number, open: OpenStayState) {
+  private appendOpenStayEvent(stays: GeofenceStayReportItem[], seqId: number, open: GeofenceOpenStayState) {
     const durationSeconds = 0
     stays.push({
       id: seqId,
@@ -174,7 +174,7 @@ export class GeofenceStayInfluxService {
 
     const telemetry = await this.fetchTelemetryPointsFromInflux(deviceIds, params.start, params.end)
 
-    const openStayByKey = new Map<string, OpenStayState>()
+    const openStayByKey = new Map<string, GeofenceOpenStayState>()
     const stays: GeofenceStayReportItem[] = []
 
     let seqId = 1

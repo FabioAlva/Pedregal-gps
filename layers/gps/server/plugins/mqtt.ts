@@ -2,6 +2,8 @@
 import mqtt from 'mqtt'
 import path from 'node:path'
 import fs from 'node:fs'
+import { db } from '@nuxthub/db'
+import { EquipmentService } from '#layers/fleet-management/server/services/Equipment/Equipment.service'
 
 export default defineNitroPlugin(async (nitroApp) => {
   const config = useRuntimeConfig()
@@ -48,10 +50,27 @@ export default defineNitroPlugin(async (nitroApp) => {
 
     mqttProvider.client.on('connect', () => {
       mqttProvider.isConnected = true
-      if (config.topics?.length) {
-        const cleanTopics = config.topics.map(t => t.trim())
-        mqttProvider.client!.subscribe(cleanTopics)
-      }
+      ;(async () => {
+        try {
+          const service = new EquipmentService(db)
+          const equipments = await service.getAll()
+          const topics = equipments
+            .map(item => item?.especificaciones?.topic)
+            .filter((topic: string | null | undefined) => typeof topic === 'string' && topic.trim().length > 0)
+            .map((topic: string) => topic.trim())
+
+          const fallbackTopics = Array.isArray(config.topics) ? config.topics.map(t => t.trim()) : []
+          const uniqueTopics = Array.from(new Set([...topics, ...fallbackTopics]))
+
+          if (uniqueTopics.length) {
+            mqttProvider.client!.subscribe(uniqueTopics)
+          } else {
+            console.warn('[MQTT] No se encontraron topics para suscribir.')
+          }
+        } catch (err) {
+          console.error('[MQTT] Error obteniendo topics desde equipment:', err)
+        }
+      })()
     })
 
     mqttProvider.client.on('error', (err) => {

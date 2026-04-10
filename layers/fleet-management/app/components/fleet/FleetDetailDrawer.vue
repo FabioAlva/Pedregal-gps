@@ -283,7 +283,7 @@ onMounted(() => {
             </div>
 
             <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-              <FilterComponent :on-search="loadReport" :hide-device-select="true" />
+              <FilterComponent :on-search="loadReport" :hide-device-select="true" variant="inline" />
             </div>
 
             <UAlert

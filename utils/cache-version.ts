@@ -5,9 +5,11 @@ export const cacheNames = {
   fleetAssignmentsAll: 'gps:fleet-equipment:all',
   fleetAssignmentsActive: 'gps:fleet-equipment:active',
   geofenceList: 'gps:geofence:list',
+  fieldsList: 'gps:fields:list',
   gpsAlerts: 'gps:alerts:list',
   gpsAlertLogs: 'gps:alert-logs:list',
-  geofenceStaysReport: 'gps:geofence-stays:report'
+  geofenceStaysReport: 'gps:geofence-stays:report',
+  fieldStaysReport: 'gps:field-stays:report'
 } as const
 
 export const cacheKeys = {
@@ -15,6 +17,10 @@ export const cacheKeys = {
   id: (id: number | string) => String(id),
   fleetsAvailable: (includePlate?: string) => includePlate?.trim() || 'all',
   geofenceStaysReport: (deviceIds: string[], startISO: string, endISO: string) => {
+    const normalizedDevices = [...deviceIds].sort().join(',')
+    return `${normalizedDevices}:${startISO}:${endISO}`
+  },
+  fieldStaysReport: (deviceIds: string[], startISO: string, endISO: string) => {
     const normalizedDevices = [...deviceIds].sort().join(',')
     return `${normalizedDevices}:${startISO}:${endISO}`
   }

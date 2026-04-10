@@ -125,6 +125,11 @@ export const fields = pgTable('campos', {
     .$type<'FUNDO' | 'CAMPO' | 'LOTE' | 'PARCELA'>()
     .notNull()
     .default('CAMPO'),
+  tipo: text('tipo')
+    .$type<'DELIMITADOR' | 'GUIA' | 'INTERES'>()
+    .notNull()
+    .default('GUIA'),
+  color: text('color'),
   coords: jsonb('coords').$type<[number, number][]>().default([]),
   areaTotalHa: doublePrecision('area_total_ha'),
   activo: boolean('activo').notNull().default(true),

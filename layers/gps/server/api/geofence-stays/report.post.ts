@@ -1,5 +1,5 @@
 import { db } from '@nuxthub/db'
-import { GeofenceStayInfluxService } from '../../services/GeofenceStay/GeofenceStayInflux.service'
+import { FieldStayInfluxService } from '../../services/FieldStay/FieldStayInflux.service'
 import { influxProvider } from '../../utils/influx'
 import {
   cacheKeys,
@@ -9,16 +9,16 @@ import {
 } from '~~/utils/cache-version'
 import { cacheMaxAge } from '~~/utils/cache-max-age'
 
-type GeofenceStayReportBody = {
+type FieldStayReportBody = {
   start: string
   end: string
   devices: string[]
 }
 
-const getGeofenceStaysReportCached = defineCachedFunction(
+const getFieldStaysReportCached = defineCachedFunction(
   async (deviceIds: string[], startISO: string, endISO: string) => {
-    const cacheKey = cacheKeys.geofenceStaysReport(deviceIds, startISO, endISO)
-    logCacheMiss(cacheNames.geofenceStaysReport, cacheKey, {
+    const cacheKey = cacheKeys.fieldStaysReport(deviceIds, startISO, endISO)
+    logCacheMiss(cacheNames.fieldStaysReport, cacheKey, {
       devicesCount: deviceIds.length,
       startISO,
       endISO
@@ -32,7 +32,7 @@ const getGeofenceStaysReportCached = defineCachedFunction(
       })
     }
 
-    const service = new GeofenceStayInfluxService(db, client)
+    const service = new FieldStayInfluxService(db, client)
     return await service.getReport({
       start: new Date(startISO),
       end: new Date(endISO),
@@ -40,17 +40,17 @@ const getGeofenceStaysReportCached = defineCachedFunction(
     })
   },
   {
-    name: cacheNames.geofenceStaysReport,
-    maxAge: cacheMaxAge.geofenceStaysReport,
+    name: cacheNames.fieldStaysReport,
+    maxAge: cacheMaxAge.fieldStaysReport,
     swr: true,
     getKey: (deviceIds: string[], startISO: string, endISO: string) => {
-      return cacheKeys.geofenceStaysReport(deviceIds, startISO, endISO)
+      return cacheKeys.fieldStaysReport(deviceIds, startISO, endISO)
     }
   }
 )
 
 const reportCachedHandler = defineEventHandler(async (event) => {
-  const body = await readBody<GeofenceStayReportBody>(event)
+  const body = await readBody<FieldStayReportBody>(event)
 
   if (!body.start || !body.end) {
     throw createError({
@@ -94,20 +94,20 @@ const reportCachedHandler = defineEventHandler(async (event) => {
   try {
     const startISO = start.toISOString()
     const endISO = end.toISOString()
-    const cacheKey = cacheKeys.geofenceStaysReport(deviceIds, startISO, endISO)
+    const cacheKey = cacheKeys.fieldStaysReport(deviceIds, startISO, endISO)
 
-    await logCacheHitIfPresent(cacheNames.geofenceStaysReport, cacheKey, {
+    await logCacheHitIfPresent(cacheNames.fieldStaysReport, cacheKey, {
       devicesCount: deviceIds.length,
       startISO,
       endISO
     })
 
-    return await getGeofenceStaysReportCached(deviceIds, startISO, endISO)
+    return await getFieldStaysReportCached(deviceIds, startISO, endISO)
   } catch (error) {
     const err = error as any
     const message = typeof err?.message === 'string' ? err.message : 'Error desconocido'
 
-    console.error('[geofence-stays/report] Error generando reporte', {
+    console.error('[field-stays/report] Error generando reporte', {
       message,
       start: body.start,
       end: body.end,
@@ -121,10 +121,11 @@ const reportCachedHandler = defineEventHandler(async (event) => {
     throw createError({
       statusCode: isInfluxFailure ? 503 : 500,
       message: import.meta.dev
-        ? `Error generando reporte de estadias por area: ${message}`
-        : 'Error generando reporte de estadias por area.'
+        ? `Error generando reporte de estadias por campo: ${message}`
+        : 'Error generando reporte de estadias por campo.'
     })
   }
 })
 
 export default reportCachedHandler
+

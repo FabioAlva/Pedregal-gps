@@ -2,12 +2,16 @@ import { NeonRoleRepository } from '#layers/auth-admin/server/Repository/NeonRol
 import type { DbClient, NewRole } from '~~/shared/types/db'
 import type { RoleRoutePermissionInput, RoutePermission } from '#layers/auth-admin/server/Repository/Interfaces/IRoleRepository'
 import { NeonUserRepository } from '#layers/auth-admin/server/Repository/NeonUserRepository'
+import { frontendBackendRouteLinks } from '~~/server/db/schema'
+import { inArray } from 'drizzle-orm'
 
 export class RoleService {
  private roleRepo: NeonRoleRepository
   private userRepo: NeonUserRepository
+  private db: DbClient
 
   constructor(db: DbClient) {
+    this.db = db
     this.roleRepo = new NeonRoleRepository(db)
     this.userRepo = new NeonUserRepository(db)
   }
@@ -34,7 +38,57 @@ export class RoleService {
 
   async syncPermissions(roleId: number, permissions: RoleRoutePermissionInput[]) {
     await this.getById(roleId)
-    return await this.roleRepo.updateRoleRoutePermissions(roleId, permissions)
+    const permissionMap = new Map<number, RoleRoutePermissionInput>()
+
+    for (const permission of permissions) {
+      permissionMap.set(permission.rutaModuloId, {
+        rutaModuloId: permission.rutaModuloId,
+        ver: Boolean(permission.ver),
+        agregar: Boolean(permission.agregar),
+        editar: Boolean(permission.editar),
+        eliminar: Boolean(permission.eliminar)
+      })
+    }
+
+    const frontendIds = permissions
+      .filter(p => p.ver || p.agregar || p.editar || p.eliminar)
+      .map(p => p.rutaModuloId)
+
+    if (frontendIds.length > 0) {
+      const links = await this.db
+        .select({
+          frontendId: frontendBackendRouteLinks.frontendRouteId,
+          backendId: frontendBackendRouteLinks.backendRouteId
+        })
+        .from(frontendBackendRouteLinks)
+        .where(inArray(frontendBackendRouteLinks.frontendRouteId, frontendIds))
+
+      for (const link of links) {
+        const frontendPermission = permissionMap.get(link.frontendId)
+        if (!frontendPermission) continue
+
+        const current = permissionMap.get(link.backendId) || {
+          rutaModuloId: link.backendId,
+          ver: false,
+          agregar: false,
+          editar: false,
+          eliminar: false
+        }
+
+        permissionMap.set(link.backendId, {
+          rutaModuloId: link.backendId,
+          ver: current.ver || frontendPermission.ver,
+          agregar: current.agregar || frontendPermission.agregar,
+          editar: current.editar || frontendPermission.editar,
+          eliminar: current.eliminar || frontendPermission.eliminar
+        })
+      }
+    }
+
+    return await this.roleRepo.updateRoleRoutePermissions(
+      roleId,
+      Array.from(permissionMap.values())
+    )
   }
 
  async getUserPermissions(userId: string) {

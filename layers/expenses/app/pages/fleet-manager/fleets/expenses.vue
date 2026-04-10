@@ -217,27 +217,52 @@ const handleDeleteCategory = async (id: number) => {
 </script>
 
 <template>
-  <div class="w-full h-screen flex flex-col p-10 font-sans text-slate-900 overflow-hidden">
-    <header class="flex items-center justify-between mb-12">
-      <div class="flex items-center gap-4">
-        <div>
-          <h1 class="font-serif text-5xl font-bold tracking-tighter text-slate-950 leading-none">Gastos</h1>
-          <nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mt-3">
-            <span>Flota Agricola</span>
-            <UIcon name="i-lucide-chevron-right" class="w-3 h-3 opacity-30" />
-            <span class="text-slate-600">Gastos Asociados</span>
-          </nav>
-        </div>
+<div class="w-full flex flex-col font-sans text-slate-900 overflow-hidden h-full">
+     <header class="flex flex-col w-full mb-6 shrink-0">
+      
+      <div class="pb-3 pl-1">
+        <nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
+          <span>Flota Agrícola</span>
+          <UIcon name="i-lucide-chevron-right" class="w-3 h-3 opacity-40" />
+          <span class="text-slate-900">Gastos Asociados</span>
+        </nav>
       </div>
 
-      <div class="flex items-center gap-3 bg-white p-2 border border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-brand-500/20">
-        <UInput v-model="search" variant="none" placeholder="Buscar gasto..." icon="i-lucide-search" class="w-64 font-medium" />
-        <div class="w-px h-8 bg-slate-100" />
-        <UButton color="slate" variant="subtle" icon="i-lucide-tags" class="px-5 font-bold" label="Categorias" @click="isCategoryModalOpen = true" />
-        <UButton color="brand" icon="i-lucide-plus" class="px-6 font-bold bg-primary text-white" label="Nuevo gasto" @click="openCreateExpense" />
+      <div class="w-full flex items-center bg-white border border-slate-300 shadow-sm focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500 rounded-none transition-colors">
+        
+        <UInput 
+          v-model="search" 
+          variant="none" 
+          placeholder="Buscar gasto..." 
+          icon="i-lucide-search" 
+          class="flex-1 font-medium"
+          :ui="{ wrapper: 'flex-1', base: 'w-full h-11 rounded-none text-sm bg-transparent' }"
+        />
+        
+        <div class="w-px h-6 bg-slate-300 mx-1" />
+        
+        <UButton 
+          color="gray" 
+          variant="ghost" 
+          icon="i-lucide-tags" 
+          class="px-5 h-11 text-xs font-bold rounded-none hover:bg-slate-50 text-slate-700" 
+          label="Categorías" 
+          @click="isCategoryModalOpen = true" 
+        />
+
+        <div class="w-px h-6 bg-slate-300 mx-1" />
+        
+        <UButton 
+          color="brand" 
+          icon="i-lucide-plus" 
+          class="px-8 h-11 text-xs font-bold text-white bg-primary rounded-none" 
+          label="Nuevo gasto" 
+          @click="openCreateExpense" 
+        />
+        
       </div>
+      
     </header>
-
     <div class="bg-white border border-slate-200 shadow-[0_12px_40px_rgba(0,0,0,0.03)] overflow-hidden flex-1 flex flex-col">
       <UTable
         :data="pagedRows"

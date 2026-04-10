@@ -8,17 +8,29 @@ Este documento es para validar rapido si la configuracion de permisos y relacion
 - Una ruta frontend puede relacionarse con varios endpoints backend.
 - La relacion se edita desde la ruta frontend en la pantalla de configuracion.
 - Para autorizar un endpoint backend se evalua:
-  - Permiso de accion en el endpoint backend (ver/agregar/editar/eliminar).
-  - Permiso ver en al menos una ruta frontend relacionada.
+  - Solo permisos en la ruta frontend relacionada.
+  - La accion se deduce por metodo HTTP (GET=ver, POST=agregar o ver, PUT/PATCH=editar, DELETE=eliminar).
+
+## Flujo para crear rutas nuevas
+
+1. Crear la ruta frontend en el modulo de rutas.
+2. Crear la ruta backend con el metodo HTTP correcto.
+3. Vincular la ruta backend a la frontend.
+4. En roles, dar permisos a la ruta frontend (ver/agregar/editar/eliminar).
+5. Guardar permisos y probar el endpoint.
+
+Notas:
+- POST permite acceso si el frontend tiene `agregar` o `ver`.
+- Si la ruta backend no esta vinculada a ninguna frontend, se bloquea.
 
 ## Regla importante
 
 Para que un endpoint backend permita una accion, deben cumplirse ambas condiciones:
 
-1. El usuario tiene permiso de la accion requerida en la ruta backend.
-2. El usuario tiene permiso ver en alguna pagina frontend relacionada con ese backend.
+1. La ruta backend esta vinculada a al menos una ruta frontend.
+2. El usuario tiene el permiso requerido en alguna de esas rutas frontend.
 
-Si quitas ver en la pagina frontend relacionada, el backend tambien queda bloqueado para ese usuario, aunque tenga el permiso en backend.
+Si quitas el permiso en la pagina frontend relacionada, el backend queda bloqueado para ese usuario.
 
 ## Inicio de sesion y ruta de entrada
 
@@ -29,6 +41,7 @@ Si quitas ver en la pagina frontend relacionada, el backend tambien queda bloque
 ## Rutas frontend clave
 
 - /gps
+- /gps/geo/fields-list
 - /gps/report
 - /gps/report/analisis-trayectos
 - /gps/area-stays
@@ -43,6 +56,9 @@ Si quitas ver en la pagina frontend relacionada, el backend tambien queda bloque
 - /api/map/route (POST)
 - /api/geofence (GET, POST)
 - /api/geofence/* (GET, PATCH, DELETE)
+- /api/fields (GET, POST)
+- /api/fields/import (POST)
+- /api/fields/* (GET, PATCH, DELETE)
 
 ### Reportes
 - /api/map/distance (POST)
@@ -50,6 +66,7 @@ Si quitas ver en la pagina frontend relacionada, el backend tambien queda bloque
 - /api/map/stops (POST)
 - /api/map/route-analysis (POST)
 - /api/geofence-stays/report (POST)
+- /api/field-stays/report (POST)
 
 ### Team fleet
 - /api/equipment (GET, POST)
@@ -84,19 +101,18 @@ Si quitas ver en la pagina frontend relacionada, el backend tambien queda bloque
 
 ### 2) Prueba base de frontend->backend
 - [ ] Dar permiso ver a frontend /gps/report.
-- [ ] Dar permiso ver a backend /api/map/distance (POST).
 - [ ] Relacionar /gps/report con /api/map/distance (POST).
-- [ ] Confirmar que el usuario puede consultar el reporte.
+- [ ] Confirmar que el usuario puede consultar el reporte (POST admite ver).
 
 ### 3) Bloqueo por quitar ver en frontend
 - [ ] Mantener backend.ver en true para /api/map/distance (POST).
 - [ ] Quitar frontend.ver en /gps/report.
 - [ ] Confirmar que el endpoint backend queda denegado para ese usuario.
 
-### 4) Bloqueo por accion backend
+### 4) Bloqueo por accion (metodo)
 - [ ] Dejar frontend.ver en /gps/alert/config-alert.
 - [ ] Relacionar con /api/gps-alert/* (PATCH).
-- [ ] Quitar backend.editar en esa ruta backend.
+- [ ] Quitar frontend.editar en /gps/alert/config-alert.
 - [ ] Confirmar que editar alerta falla por permisos.
 
 ### 5) Relacion faltante
@@ -111,11 +127,10 @@ Si quitas ver en la pagina frontend relacionada, el backend tambien queda bloque
 
 ## Diagnostico rapido si algo falla
 
-1. Revisar si la ruta frontend correcta tiene permiso ver.
-2. Revisar si el endpoint backend correcto tiene la accion requerida.
-3. Revisar si existe la relacion frontend->backend.
-4. Revisar que el usuario tenga el rol correcto asignado.
-5. Re-correr seed si faltan rutas base.
+1. Revisar si la ruta frontend correcta tiene el permiso requerido.
+2. Revisar si existe la relacion frontend->backend.
+3. Revisar que el usuario tenga el rol correcto asignado.
+4. Re-correr seed si faltan rutas base.
 
 ## Comandos utiles
 
@@ -127,7 +142,6 @@ Si quitas ver en la pagina frontend relacionada, el backend tambien queda bloque
 
 ## Archivos clave para revisar
 
-- app/pages/configuracion/roles.vue
-- server/utils/permissions.ts
+- layers/auth-admin/server/utils/betterauth-permissions.ts
 - server/db/seed/section-routes.seed.ts
 - server/db/seed/seed.ts

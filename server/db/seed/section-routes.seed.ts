@@ -178,6 +178,7 @@ const DEFAULT_RULES: SeedRule[] = [
   { nombre: 'Inicio', url: '/', tipoRuta: 'frontend' as const, metodo: null, accionRequerida: null, protegida: false },
   { nombre: 'Login', url: '/login', tipoRuta: 'frontend' as const, metodo: null, accionRequerida: null, protegida: false },
   { nombre: 'Mapa en vivo', url: '/gps', tipoRuta: 'frontend' as const, metodo: null, accionRequerida: null, protegida: true },
+  { nombre: 'Campos (lista)', url: '/gps/geo/fields-list', tipoRuta: 'frontend' as const, metodo: null, accionRequerida: null, protegida: true },
   { nombre: 'Reporte GPS', url: '/gps/report', tipoRuta: 'frontend' as const, metodo: null, accionRequerida: null, protegida: true },
   { nombre: 'Analisis de trayectos', url: '/gps/report/analisis-trayectos', tipoRuta: 'frontend' as const, metodo: null, accionRequerida: null, protegida: true },
   { nombre: 'Ingresos por area', url: '/gps/area-stays', tipoRuta: 'frontend' as const, metodo: null, accionRequerida: null, protegida: true },
@@ -197,6 +198,12 @@ const DEFAULT_RULES: SeedRule[] = [
   { nombre: 'API geocercas obtener', url: '/api/geofence/*', tipoRuta: 'backend' as const, metodo: 'GET', accionRequerida: 'ver' as const, protegida: true },
   { nombre: 'API geocercas actualizar', url: '/api/geofence/*', tipoRuta: 'backend' as const, metodo: 'PATCH', accionRequerida: 'editar' as const, protegida: true },
   { nombre: 'API geocercas eliminar', url: '/api/geofence/*', tipoRuta: 'backend' as const, metodo: 'DELETE', accionRequerida: 'eliminar' as const, protegida: true },
+  { nombre: 'API campos listar', url: '/api/fields', tipoRuta: 'backend' as const, metodo: 'GET', accionRequerida: 'ver' as const, protegida: true },
+  { nombre: 'API campos crear', url: '/api/fields', tipoRuta: 'backend' as const, metodo: 'POST', accionRequerida: 'agregar' as const, protegida: true },
+  { nombre: 'API campos importar', url: '/api/fields/import', tipoRuta: 'backend' as const, metodo: 'POST', accionRequerida: 'agregar' as const, protegida: true },
+  { nombre: 'API campos obtener', url: '/api/fields/*', tipoRuta: 'backend' as const, metodo: 'GET', accionRequerida: 'ver' as const, protegida: true },
+  { nombre: 'API campos actualizar', url: '/api/fields/*', tipoRuta: 'backend' as const, metodo: 'PATCH', accionRequerida: 'editar' as const, protegida: true },
+  { nombre: 'API campos eliminar', url: '/api/fields/*', tipoRuta: 'backend' as const, metodo: 'DELETE', accionRequerida: 'eliminar' as const, protegida: true },
 
   // Reportes
   { nombre: 'API reporte distancia', url: '/api/map/distance', tipoRuta: 'backend' as const, metodo: 'POST', accionRequerida: 'ver' as const, protegida: true },
@@ -204,6 +211,7 @@ const DEFAULT_RULES: SeedRule[] = [
   { nombre: 'API reporte inactividad', url: '/api/map/stops', tipoRuta: 'backend' as const, metodo: 'POST', accionRequerida: 'ver' as const, protegida: true },
   { nombre: 'API analisis trayectos', url: '/api/map/route-analysis', tipoRuta: 'backend' as const, metodo: 'POST', accionRequerida: 'ver' as const, protegida: true },
   { nombre: 'API estadias por area', url: '/api/geofence-stays/report', tipoRuta: 'backend' as const, metodo: 'POST', accionRequerida: 'ver' as const, protegida: true },
+  { nombre: 'API estadias por campo', url: '/api/field-stays/report', tipoRuta: 'backend' as const, metodo: 'POST', accionRequerida: 'ver' as const, protegida: true },
 
   // Team fleet
   { nombre: 'API GPS listar', url: '/api/equipment', tipoRuta: 'backend' as const, metodo: 'GET', accionRequerida: 'ver' as const, protegida: true },
@@ -263,6 +271,15 @@ const DEFAULT_FRONTEND_BACKEND_LINKS = [
   { frontendUrl: '/gps', backendUrl: '/api/geofence/*', backendMethod: 'GET' },
   { frontendUrl: '/gps', backendUrl: '/api/geofence/*', backendMethod: 'PATCH' },
   { frontendUrl: '/gps', backendUrl: '/api/geofence/*', backendMethod: 'DELETE' },
+  { frontendUrl: '/gps', backendUrl: '/api/fields', backendMethod: 'GET' },
+  { frontendUrl: '/gps', backendUrl: '/api/fields', backendMethod: 'POST' },
+  { frontendUrl: '/gps', backendUrl: '/api/fields/import', backendMethod: 'POST' },
+  { frontendUrl: '/gps', backendUrl: '/api/fields/*', backendMethod: 'GET' },
+  { frontendUrl: '/gps', backendUrl: '/api/fields/*', backendMethod: 'PATCH' },
+  { frontendUrl: '/gps', backendUrl: '/api/fields/*', backendMethod: 'DELETE' },
+
+  // /gps/geo/fields-list
+  { frontendUrl: '/gps/geo/fields-list', backendUrl: '/api/fields', backendMethod: 'GET' },
 
   // /gps/report
   { frontendUrl: '/gps/report', backendUrl: '/api/map/distance', backendMethod: 'POST' },
@@ -274,6 +291,7 @@ const DEFAULT_FRONTEND_BACKEND_LINKS = [
 
   // /gps/area-stays
   { frontendUrl: '/gps/area-stays', backendUrl: '/api/geofence-stays/report', backendMethod: 'POST' },
+  { frontendUrl: '/gps/area-stays', backendUrl: '/api/field-stays/report', backendMethod: 'POST' },
 
   // /gps/team-fleet
   { frontendUrl: '/gps/team-fleet', backendUrl: '/api/equipment', backendMethod: 'GET' },

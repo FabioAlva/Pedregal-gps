@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-export interface GeofenceStayRow {
+export interface FieldStayRow {
   id: number
-  geofenceName: string
+  fieldName: string
   deviceId: string
   enteredAt: string
   exitedAt: string | null
@@ -12,18 +12,18 @@ export interface GeofenceStayRow {
   fleetEquipmentId: number
 }
 
-export interface GeofenceStayReport {
+export interface FieldStayReport {
   start: string
   end: string
   totalSeconds: number
   totalMinutes: number
   totalHours: number
   count: number
-  stays: GeofenceStayRow[]
+  stays: FieldStayRow[]
 }
 
 export const useAreaStaysStore = defineStore('gps-area-stays', () => {
-  const report = ref<GeofenceStayReport | null>(null)
+  const report = ref<FieldStayReport | null>(null)
   const lastFetchAt = ref(0)
   const lastQueryKey = ref('')
 
@@ -45,3 +45,4 @@ export const useAreaStaysStore = defineStore('gps-area-stays', () => {
     isCacheFresh
   }
 })
+

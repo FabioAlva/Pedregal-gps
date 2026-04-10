@@ -46,6 +46,14 @@ export function useMap() {
         const deviceMeta = listDevice.value.find(
           d => d.value === id || d.id === id
         )
+        const rawPoints = deviceData.points
+          .map(p => p.state.reported)
+          .filter(p => p?.lat != null && p?.lng != null)
+          .map(p => ({
+            lat: p.lat,
+            lng: p.lng,
+            ignition: (p as any)[239]
+          }))
         const cleanPoints = deviceData.points
           .map(p => p.state.reported)
           .filter(p => p?.lat != null)
@@ -53,10 +61,11 @@ export function useMap() {
         return {
           id,
           points: cleanPoints,
+          rawPoints,
           name: deviceMeta?.name || 'Unidad',
           color: deviceMeta?.color || '#3b82f6',
           speed: deviceData.lastPoint?.sp ?? 0,
-          status: deviceStatus.value[id] ?? 'offline',
+          status: deviceStatus.value[id] ?? 'sin-senal',
           stopTime: deviceData.totalStopHours,
           maxSpeed: deviceData.maxSpeed,
           avgSpeed: deviceData.avgSpeed,
@@ -115,6 +124,7 @@ export function useMap() {
       hasData: Object.keys(allRoutes.value).length > 0,
       isFresh: store.isRouteCacheFresh(queryKey, MAP_ROUTE_PINIA_TTL_MS)
     })) {
+      store.updateStatusesFromRoutes(allRoutes.value)
       updateCenterFromData(allRoutes.value)
       return
     }
@@ -144,6 +154,7 @@ export function useMap() {
 
       const data = await response.json()
       allRoutes.value = data
+      store.updateStatusesFromRoutes(data)
       store.setRouteCacheMeta(queryKey)
       updateCenterFromData(data)
     } finally {

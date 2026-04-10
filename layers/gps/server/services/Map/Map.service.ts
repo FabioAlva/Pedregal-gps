@@ -26,7 +26,8 @@ export const getRouteData = async (
         selector_last(lng, time)['value']    AS lng,   
         selector_last(speed, time)['value']  AS speed, 
         selector_last(ang, time)['value']    AS ang,   
-          selector_last(alt, time)['value']    AS alt
+        selector_last(alt, time)['value']    AS alt,
+        selector_last(p239, time)['value']   AS p239
       FROM telemetry
       WHERE time >= '${start}' AND time <= '${end}'
         AND device_id IN (${getDeviceFilter(devices)})
@@ -45,7 +46,8 @@ export const getRouteData = async (
           ts: new Date(row.time).getTime(),
           sp: Number(row.speed || 0),
           ang: Number(row.ang || 0),
-          alt: Number(row.alt || 0)
+          alt: Number(row.alt || 0),
+          239: row.p239 != null ? Number(row.p239) : undefined
         }
       }
     })

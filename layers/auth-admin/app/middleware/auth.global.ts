@@ -37,6 +37,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   const resolveFirstAllowedRoute = async () => {
     const map = await getNavigationMap(headers)
+    const gpsRoute = map.find(route => route.url === '/gps')
+    if (gpsRoute && canUserView(permissionsState.value, gpsRoute.id)) {
+      return gpsRoute.url
+    }
     return map.find(route => canUserView(permissionsState.value, route.id))?.url ?? null
   }
 

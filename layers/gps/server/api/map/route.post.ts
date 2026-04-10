@@ -1,6 +1,5 @@
 import { getMapDataWithStats } from '../../services/Map/Map.service'
 import { influxProvider } from '../../utils/influx'
-import { cacheMaxAge } from '~~/utils/cache-max-age'
 
 type MapReportBody = {
   devices: string[]
@@ -8,25 +7,14 @@ type MapReportBody = {
   end: string
 }
 
-const getMapRouteCached = defineCachedFunction(
-  async (devices: string[], startISO: string, endISO: string) => {
-    const client = influxProvider.client
-    if (!client) {
-      throw createError({ statusCode: 503, message: 'Influx no esta disponible en este momento.' })
-    }
-
-    return await getMapDataWithStats(client, devices, startISO, endISO)
-  },
-  {
-    name: 'gps:map:route',
-    maxAge: cacheMaxAge.mapRoute,
-    swr: true,
-    getKey: (devices: string[], startISO: string, endISO: string) => {
-      const normalizedDevices = [...devices].sort().join(',')
-      return `${normalizedDevices}:${startISO}:${endISO}`
-    }
+const getMapRoute = async (devices: string[], startISO: string, endISO: string) => {
+  const client = influxProvider.client
+  if (!client) {
+    throw createError({ statusCode: 503, message: 'Influx no esta disponible en este momento.' })
   }
-)
+
+  return await getMapDataWithStats(client, devices, startISO, endISO)
+}
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<MapReportBody>(event)
@@ -55,7 +43,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    return await getMapRouteCached(devices, start.toISOString(), end.toISOString())
+    return await getMapRoute(devices, start.toISOString(), end.toISOString())
   } catch (error: any) {
     if (error?.statusCode) throw error
     throw createError({ statusCode: 500, message: 'Error en reporte de ruta.' })

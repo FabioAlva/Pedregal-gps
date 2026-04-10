@@ -22,6 +22,7 @@ const normalizeBoundary = (value: unknown): CenterCoords[] => {
   return value
     .map(point => normalizeCenter(point))
     .filter((point): point is CenterCoords => point != null)
+    .slice(0, 2)
 }
 
 const ensureOrganization = async () => {

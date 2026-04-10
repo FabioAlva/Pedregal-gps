@@ -21,12 +21,11 @@ const currentYear = new Date().getFullYear()
         
         <div class="flex items-center gap-5">
           <div class="flex items-center gap-4">
-            <span class="text-4xl font-bold tracking-tighter text-white leading-none">TGI</span>
-            <div class="h-8 w-px bg-white/20" />
-            <div class="flex flex-col leading-none pt-0.5">
-              <span class="text-[11px] font-bold text-white uppercase tracking-[0.1em]">Automatización</span>
-              <span class="text-[11px] font-medium text-white/50 uppercase tracking-[0.1em]">Industrial</span>
-            </div>
+           <img 
+            src="/images/logo-tgi.svg" 
+            alt="P" 
+            class=" w-full h-10 object-contain "
+          />
           </div>
         </div>
 
@@ -39,7 +38,7 @@ const currentYear = new Date().getFullYear()
           <h1 class="font-serif text-6xl xl:text-8xl font-bold leading-[0.85] tracking-tighter text-white">
             Sistema de <br/>
             <span class="text-red-600 italic font-medium">Gestión</span> de <br/>
-            Flota Agraria
+            Flota Agrícola
           </h1>
           
           <p class="mt-12 max-w-sm text-lg text-white/70 leading-relaxed font-light border-l-2 border-brand-500 pl-8">

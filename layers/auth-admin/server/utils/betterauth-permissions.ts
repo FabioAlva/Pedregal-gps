@@ -84,34 +84,37 @@ export async function requireBackendPermission(event: H3Event): Promise<void> {
     const userId = await getAuthenticatedUserId(event)
     const permissions = await roleService.getUserPermissions(userId)
     const action = matchedRoute.accionRequerida ?? methodToAction(method)
-
-    const routePermissions = permissions.routes?.[matchedRoute.id]
-    const hasDirectPermission = routePermissions?.[action] === true
+    const requiredActions = toAllowedActions(method, action)
 
     const linkedFrontendIds = await moduleRouteService.getLinkedFrontendIds(matchedRoute.id)
-    const frontendAction = action === 'ver' ? 'ver' : action
-    const hasLinkedFrontendAccess = linkedFrontendIds.length === 0
-        ? true
-        : linkedFrontendIds.some(id => permissions.routes?.[id]?.[frontendAction] === true)
+    const hasLinkedFrontend = linkedFrontendIds.length > 0
+    const hasLinkedFrontendAccess = linkedFrontendIds.some(id =>
+        requiredActions.some(required => permissions.routes?.[id]?.[required] === true)
+    )
 
     console.log('[AUTH] Decision', {
         userId,
         action,
-        hasDirectPermission,
+        requiredActions,
         linkedFrontendIds,
-        frontendAction,
+        hasLinkedFrontend,
         hasLinkedFrontendAccess
     })
 
-    if (hasDirectPermission && hasLinkedFrontendAccess) {
+    if (!hasLinkedFrontend) {
+        throw createError({
+            statusCode: 403,
+            statusMessage: 'Acceso denegado: Ruta backend sin interfaz vinculada.'
+        })
+    }
+
+    if (hasLinkedFrontendAccess) {
         return
     }
 
     throw createError({
         statusCode: 403,
-        statusMessage: !hasLinkedFrontendAccess
-            ? 'Acceso denegado: No tienes acceso al módulo de interfaz necesario.'
-            : `No tienes permiso para ${action} en este recurso.`
+        statusMessage: `No tienes permiso para ${requiredActions.join(' o ')} en este recurso.`
     })
 }
 
@@ -122,4 +125,13 @@ function methodToAction(method: string | undefined): PermissionAction {
     if (m === 'PUT' || m === 'PATCH') return 'editar'
     if (m === 'DELETE') return 'eliminar'
     return 'ver'
+}
+
+function toAllowedActions(method: string | undefined, action: PermissionAction): PermissionAction[] {
+    const m = String(method || 'GET').toUpperCase()
+    if (m === 'POST') return ['agregar', 'ver']
+    if (m === 'PUT' || m === 'PATCH') return ['editar']
+    if (m === 'DELETE') return ['eliminar']
+    if (m === 'GET') return ['ver']
+    return [action]
 }

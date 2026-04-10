@@ -1,27 +1,30 @@
 <script setup lang="ts">
 import LocationsMap from '#layers/gps/app/components/LocationsMap.client.vue'
 import { useGeoConfig } from '#layers/gps/app/composables/useGeoConfig'
-import { useGeofences } from '#layers/gps/app/composables/useGeofences'
+import { useFields } from '#layers/gps/app/composables/useFields'
+import { circleToPolygon } from '#layers/gps/app/utils/field-geometry'
 
-type DrawMode = 'geofence' | 'center' | 'boundary'
-type GeofenceShape = 'circle' | 'polygon'
-type SettingsPanel = 'map' | 'geofence'
+type DrawMode = 'field' | 'center' | 'boundary'
+type FieldShape = 'circle' | 'polygon'
+type SettingsPanel = 'map' | 'field'
 
 type LatLng = [number, number]
 
 const { center: configCenter, boundary, fetchConfig, saveConfig, isSaving } = useGeoConfig()
-const { saveGeofence } = useGeofences()
+const { saveField, importGeojson } = useFields()
 
 const activeMode = ref<DrawMode | null>(null)
 const tempCoords = ref<LatLng | null>(null)
 const boundaryDraft = ref<LatLng[]>([])
 const viewCenter = ref<LatLng | null>(null)
-const geofenceShape = ref<GeofenceShape>('circle')
-const geofenceDraft = ref<LatLng[]>([])
-const geofenceName = ref('')
-const geofenceColor = ref('#3b82f6')
-const geofenceRadius = ref(300)
-const isSavingZone = ref(false)
+const fieldShape = ref<FieldShape>('circle')
+const fieldDraft = ref<LatLng[]>([])
+const fieldName = ref('')
+const fieldRadius = ref(300)
+const fieldColor = ref('#3b82f6')
+const fieldTipo = ref<'DELIMITADOR' | 'GUIA' | 'INTERES'>('GUIA')
+const isSavingField = ref(false)
+const isImportingGeojson = ref(false)
 const showSettings = ref(false)
 const activePanel = ref<SettingsPanel>('map')
 
@@ -36,10 +39,10 @@ const settingsItems = [
       }
     },
     {
-      label: 'Configurar geocercas',
+      label: 'Configurar campos',
       icon: 'i-lucide-shapes',
       onSelect: () => {
-        activePanel.value = 'geofence'
+        activePanel.value = 'field'
         showSettings.value = true
       }
     }
@@ -47,7 +50,7 @@ const settingsItems = [
 ]
 
 const isDrawing = computed(() => activeMode.value !== null)
-const drawMode = computed<DrawMode>(() => activeMode.value ?? 'geofence')
+const drawMode = computed<DrawMode>(() => activeMode.value ?? 'field')
 
 const mapCenter = computed<LatLng>(() => {
   return viewCenter.value
@@ -59,8 +62,8 @@ const boundaryPreview = computed(() => {
   return activeMode.value === 'boundary' ? boundaryDraft.value : boundary.value
 })
 
-const geofencePointsPreview = computed(() => {
-  return geofenceShape.value === 'polygon' ? geofenceDraft.value : []
+const fieldPointsPreview = computed(() => {
+  return fieldShape.value === 'polygon' ? fieldDraft.value : []
 })
 
 const startCenterSelection = () => {
@@ -76,13 +79,15 @@ const startBoundarySelection = () => {
   activePanel.value = 'map'
 }
 
-const startGeofenceSelection = () => {
-  activeMode.value = 'geofence'
-  geofenceName.value = ''
-  geofenceDraft.value = []
+const startFieldSelection = () => {
+  activeMode.value = 'field'
+  fieldName.value = ''
+  fieldColor.value = '#3b82f6'
+  fieldTipo.value = 'GUIA'
+  fieldDraft.value = []
   showSettings.value = true
-  activePanel.value = 'geofence'
-  if (geofenceShape.value === 'circle') {
+  activePanel.value = 'field'
+  if (fieldShape.value === 'circle') {
     tempCoords.value = mapCenter.value
   } else {
     tempCoords.value = null
@@ -90,7 +95,7 @@ const startGeofenceSelection = () => {
 }
 
 const cancelDrawing = () => {
-  if (activeMode.value === 'geofence') tempCoords.value = null
+  if (activeMode.value === 'field') tempCoords.value = null
   activeMode.value = null
 }
 
@@ -102,17 +107,25 @@ const onCenterSelected = (coords: LatLng) => {
 
 const onBoundaryPointAdded = (coords: LatLng) => {
   if (activeMode.value !== 'boundary') return
-  boundaryDraft.value = [...boundaryDraft.value, coords]
+  if (boundaryDraft.value.length === 0) {
+    boundaryDraft.value = [coords]
+    return
+  }
+  if (boundaryDraft.value.length === 1) {
+    boundaryDraft.value = [boundaryDraft.value[0]!, coords]
+    return
+  }
+  boundaryDraft.value = [boundaryDraft.value[0]!, coords]
 }
 
-const onGeofencePointAdded = (coords: LatLng) => {
-  if (activeMode.value !== 'geofence') return
-  if (geofenceShape.value !== 'polygon') return
-  geofenceDraft.value = [...geofenceDraft.value, coords]
+const onFieldPointAdded = (coords: LatLng) => {
+  if (activeMode.value !== 'field') return
+  if (fieldShape.value !== 'polygon') return
+  fieldDraft.value = [...fieldDraft.value, coords]
 }
 
 const finalizeBoundary = () => {
-  if (boundaryDraft.value.length < 3) return
+  if (boundaryDraft.value.length < 2) return
   boundary.value = [...boundaryDraft.value]
   activeMode.value = null
 }
@@ -122,40 +135,42 @@ const clearBoundary = () => {
   boundary.value = []
 }
 
-const clearGeofenceDraft = () => {
-  geofenceDraft.value = []
+const clearFieldDraft = () => {
+  fieldDraft.value = []
 }
 
-const saveGeofenceDraft = async () => {
-  if (!geofenceName.value.trim()) return
+const saveFieldDraft = async () => {
+  if (!fieldName.value.trim()) return
 
-  if (geofenceShape.value === 'circle' && !tempCoords.value) return
-  if (geofenceShape.value === 'polygon' && geofenceDraft.value.length < 3) return
+  if (fieldShape.value === 'circle' && !tempCoords.value) return
+  if (fieldShape.value === 'polygon' && fieldDraft.value.length < 3) return
 
-  isSavingZone.value = true
+  isSavingField.value = true
   try {
-    if (geofenceShape.value === 'circle') {
-      await saveGeofence({
-        nombre: geofenceName.value.trim(),
-        tipo: 'circle',
-        radius: Number(geofenceRadius.value || 300),
-        color: geofenceColor.value,
-        coords: tempCoords.value
+    if (fieldShape.value === 'circle' && tempCoords.value) {
+      const polygon = circleToPolygon(tempCoords.value, Number(fieldRadius.value || 300))
+      await saveField({
+        nombre: fieldName.value.trim(),
+        categoria: 'CAMPO',
+        tipo: fieldTipo.value,
+        coords: polygon,
+        color: fieldColor.value
       })
     } else {
-      await saveGeofence({
-        nombre: geofenceName.value.trim(),
-        tipo: 'polygon',
-        color: geofenceColor.value,
-        coords: geofenceDraft.value
+      await saveField({
+        nombre: fieldName.value.trim(),
+        categoria: 'CAMPO',
+        tipo: fieldTipo.value,
+        coords: fieldDraft.value,
+        color: fieldColor.value
       })
     }
-    geofenceName.value = ''
-    geofenceDraft.value = []
+    fieldName.value = ''
+    fieldDraft.value = []
     tempCoords.value = null
     activeMode.value = null
   } finally {
-    isSavingZone.value = false
+    isSavingField.value = false
   }
 }
 
@@ -164,6 +179,17 @@ const onSaveConfig = async () => {
     center: configCenter.value,
     boundary: boundary.value
   })
+}
+
+const onImportGeojson = async () => {
+  if (isImportingGeojson.value) return
+  if (import.meta.client && !window.confirm('Importar GeoJSON desde public/maps/map.geojson?')) return
+  isImportingGeojson.value = true
+  try {
+    await importGeojson()
+  } finally {
+    isImportingGeojson.value = false
+  }
 }
 
 onMounted(async () => {
@@ -214,15 +240,15 @@ onMounted(async () => {
           :use-boundary-bounds="false"
           :show-boundary-mask="false"
           :use-zone-marker="false"
-          :geofence-shape="geofenceShape"
-          :geofence-draft-coords="geofencePointsPreview"
-          :show-geofence-draft-markers="activeMode === 'geofence' && geofenceShape === 'polygon'"
-          :geofence-radius="geofenceRadius"
+          :field-shape="fieldShape"
+          :field-draft-coords="fieldPointsPreview"
+          :show-field-draft-markers="activeMode === 'field' && fieldShape === 'polygon'"
+          :field-radius="fieldRadius"
           @cancel-drawing="cancelDrawing"
           @update-coords="(coords) => (tempCoords = coords)"
           @update-center="onCenterSelected"
           @add-boundary-point="onBoundaryPointAdded"
-          @add-geofence-point="onGeofencePointAdded"
+          @add-field-point="onFieldPointAdded"
         />
       </ClientOnly>
       <div
@@ -235,7 +261,7 @@ onMounted(async () => {
               <div class="flex items-center gap-2">
                 <UIcon name="i-lucide-settings" class="text-slate-600 w-4 h-4" />
                 <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">
-                  {{ activePanel === 'map' ? 'Configurar mapa' : 'Configurar geocercas' }}
+                  {{ activePanel === 'map' ? 'Configurar mapa' : 'Configurar campos' }}
                 </span>
               </div>
               <UButton
@@ -275,7 +301,7 @@ onMounted(async () => {
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-[10px] font-bold uppercase text-slate-500">Limite del mapa</p>
-                  <p class="text-[11px] text-slate-600">{{ boundaryPreview.length ? 'Poligono definido' : 'Sin definir' }}</p>
+                  <p class="text-[11px] text-slate-600">{{ boundaryPreview.length === 2 ? 'Rectangulo definido' : 'Sin definir' }}</p>
                 </div>
                 <div class="flex gap-2">
                   <UButton
@@ -297,14 +323,14 @@ onMounted(async () => {
                 </div>
               </div>
               <div v-if="activeMode === 'boundary'" class="text-[10px] text-slate-600 font-semibold">
-                Agrega puntos con clics. Minimo 3 para cerrar el area.
+                Marca dos esquinas opuestas para definir el rectangulo.
               </div>
               <UButton
                 label="Confirmar limite"
                 size="xs"
                 icon="i-lucide-check"
                 block
-                :disabled="boundaryDraft.length < 3"
+                :disabled="boundaryDraft.length < 2"
                 color="neutral"
                 @click="finalizeBoundary"
               />
@@ -323,16 +349,37 @@ onMounted(async () => {
           </div>
 
           <div v-else class="space-y-4">
+            <div class="rounded-xl border border-slate-200/70 bg-white/80 p-3 space-y-2">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-[10px] font-bold uppercase text-slate-500">Importar GeoJSON</p>
+                  <p class="text-[11px] text-slate-600">Fuente: public/maps/map.geojson</p>
+                </div>
+                <UButton
+                  label="Importar"
+                  size="xs"
+                  icon="i-lucide-upload"
+                  variant="soft"
+                  color="neutral"
+                  :loading="isImportingGeojson"
+                  @click="onImportGeojson"
+                />
+              </div>
+              <p class="text-[10px] text-slate-500">
+                Se importan solo poligonos y se calcula la jerarquia por contencion.
+              </p>
+            </div>
+
             <div class="rounded-xl border border-slate-200/70 bg-white/80 p-3 space-y-3">
               <div class="flex items-center justify-between">
-                <p class="text-[10px] font-bold uppercase text-slate-500">Crear zona</p>
+                <p class="text-[10px] font-bold uppercase text-slate-500">Crear campo</p>
                 <UButton
                   label="Iniciar"
                   size="xs"
                   icon="i-lucide-plus"
                   variant="soft"
                   color="neutral"
-                  @click="startGeofenceSelection"
+                  @click="startFieldSelection"
                 />
               </div>
 
@@ -341,36 +388,57 @@ onMounted(async () => {
                   :label="'Circular'"
                   size="xs"
                   icon="i-lucide-circle"
-                  :variant="geofenceShape === 'circle' ? 'solid' : 'ghost'"
+                  :variant="fieldShape === 'circle' ? 'solid' : 'ghost'"
                   color="neutral"
-                  @click="geofenceShape = 'circle'"
+                  @click="fieldShape = 'circle'"
                 />
                 <UButton
                   :label="'Poligonal'"
                   size="xs"
                   icon="i-lucide-triangle"
-                  :variant="geofenceShape === 'polygon' ? 'solid' : 'ghost'"
+                  :variant="fieldShape === 'polygon' ? 'solid' : 'ghost'"
                   color="neutral"
-                  @click="geofenceShape = 'polygon'"
+                  @click="fieldShape = 'polygon'"
                 />
               </div>
 
-              <div class="grid grid-cols-2 gap-2">
-                <UInput v-model="geofenceName" placeholder="Nombre de zona" size="xs" />
-                <UInput v-model="geofenceColor" type="color" size="xs" />
+              <div class="grid grid-cols-1 gap-2">
+                <UInput v-model="fieldName" placeholder="Nombre de campo" size="xs" />
+              </div>
+
+              <USelectMenu
+                v-model="fieldTipo"
+                :items="[
+                  { label: 'Delimitador', value: 'DELIMITADOR' },
+                  { label: 'Guia', value: 'GUIA' },
+                  { label: 'Interes', value: 'INTERES' }
+                ]"
+                value-key="value"
+                label-key="label"
+                size="xs"
+                placeholder="Tipo de campo"
+              />
+
+              <div class="flex items-center gap-2">
+                <UInput
+                  v-model="fieldColor"
+                  type="color"
+                  class="w-10 h-8 p-0 overflow-hidden"
+                />
+                <span class="text-[10px] font-bold uppercase text-slate-500">Color del campo</span>
               </div>
 
               <UInput
-                v-if="geofenceShape === 'circle'"
-                v-model="geofenceRadius"
+                v-if="fieldShape === 'circle'"
+                v-model="fieldRadius"
                 type="number"
                 size="xs"
                 trailing-icon="i-lucide-ruler"
                 placeholder="Radio (m)"
               />
 
-              <div v-if="activeMode === 'geofence'" class="text-[10px] text-slate-600 font-semibold">
-                <span v-if="geofenceShape === 'circle'">Haz clic en el mapa para definir el centro.</span>
+              <div v-if="activeMode === 'field'" class="text-[10px] text-slate-600 font-semibold">
+                <span v-if="fieldShape === 'circle'">Haz clic en el mapa para definir el centro.</span>
                 <span v-else>Haz clic para agregar puntos del poligono (minimo 3).</span>
               </div>
 
@@ -381,17 +449,17 @@ onMounted(async () => {
                   icon="i-lucide-eraser"
                   variant="ghost"
                   color="neutral"
-                  @click="clearGeofenceDraft"
+                  @click="clearFieldDraft"
                 />
                 <UButton
-                  label="Guardar zona"
+                  label="Guardar campo"
                   size="xs"
                   icon="i-lucide-save"
                   class="flex-1"
                   color="neutral"
-                  :loading="isSavingZone"
-                  :disabled="!geofenceName.trim() || (geofenceShape === 'circle' ? !tempCoords : geofenceDraft.length < 3)"
-                  @click="saveGeofenceDraft"
+                  :loading="isSavingField"
+                  :disabled="!fieldName.trim() || (fieldShape === 'circle' ? !tempCoords : fieldDraft.length < 3)"
+                  @click="saveFieldDraft"
                 />
               </div>
             </div>

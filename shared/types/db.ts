@@ -7,6 +7,7 @@ import type {
   equipmentStatus,
   equipmentType,
   fleet,
+  fields,
   geofences,
   geofenceStays,
   fleetEquipment,
@@ -33,6 +34,7 @@ export type GpsAlertLog = typeof gpsAlertLogs.$inferSelect
 export type GpsAlert = typeof gpsAlerts.$inferSelect
 export type FleetEquipment = typeof fleetEquipment.$inferSelect
 export type Geofence = typeof geofences.$inferSelect
+export type Field = typeof fields.$inferSelect
 export type GeofenceStay = typeof geofenceStays.$inferSelect
 export type User = typeof user.$inferSelect
 export type Role = typeof roles.$inferSelect
@@ -57,6 +59,7 @@ export type NewGpsAlertLog = typeof gpsAlertLogs.$inferInsert
 export type NewGpsAlert= typeof gpsAlerts.$inferInsert
 export type NewGeofenceStay = typeof geofenceStays.$inferInsert
 export type NewGeofence = typeof geofences.$inferInsert
+export type NewField = typeof fields.$inferInsert
 export type NewEquipmentStatus = typeof equipmentStatus.$inferInsert
 export type NewEquipment = typeof equipment.$inferInsert
 export type NewFleet = typeof fleet.$inferInsert

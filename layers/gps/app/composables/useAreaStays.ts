@@ -1,11 +1,11 @@
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import useFilter from './useFilter'
-import { useAreaStaysStore, type GeofenceStayReport } from '../stores/useAreaStaysStore'
+import { useAreaStaysStore, type FieldStayReport } from '../stores/useAreaStaysStore'
 import { cacheMaxAgeFromPinia } from '~~/utils/cache-max-age'
 import { shouldUsePiniaCache } from '~~/app/composables/usePiniaCacheGuard'
 
-const AREA_STAYS_PINIA_TTL_MS = cacheMaxAgeFromPinia.geofenceStaysReport * 1000
+const AREA_STAYS_PINIA_TTL_MS = cacheMaxAgeFromPinia.fieldStaysReport * 1000
 
 export function useAreaStays() {
 
@@ -15,20 +15,20 @@ export function useAreaStays() {
 
   const isLoading = ref(false)
   const errorMessage = ref('')
-  const selectedZone = ref('all')
+  const selectedField = ref('all')
 
-  const zoneOptions = computed(() => {
-    const names = Array.from(new Set((report.value?.stays ?? []).map(stay => stay.geofenceName))).sort((a, b) => a.localeCompare(b))
+  const fieldOptions = computed(() => {
+    const names = Array.from(new Set((report.value?.stays ?? []).map(stay => stay.fieldName))).sort((a, b) => a.localeCompare(b))
     return [
-      { label: 'Todas las zonas', value: 'all' },
+      { label: 'Todos los campos', value: 'all' },
       ...names.map(name => ({ label: name, value: name }))
     ]
   })
 
   const rows = computed(() => {
     const source = report.value?.stays ?? []
-    if (selectedZone.value === 'all') return source
-    return source.filter(stay => stay.geofenceName === selectedZone.value)
+    if (selectedField.value === 'all') return source
+    return source.filter(stay => stay.fieldName === selectedField.value)
   })
 
   const fetchAreaStays = async (options?: { showValidationMessage?: boolean, force?: boolean }) => {
@@ -55,15 +55,15 @@ export function useAreaStays() {
 
     isLoading.value = true
     try {
-      const endpoint = '/api/geofence-stays/report' as string
-      report.value = await $fetch<GeofenceStayReport>(endpoint, {
+      const endpoint = '/api/field-stays/report' as string
+      report.value = await $fetch<FieldStayReport>(endpoint, {
         method: 'POST',
         body: { devices, start, end }
       })
       areaStaysStore.setCacheMeta(queryKey)
 
-      if (selectedZone.value !== 'all' && !rows.value.length) {
-        selectedZone.value = 'all'
+      if (selectedField.value !== 'all' && !rows.value.length) {
+        selectedField.value = 'all'
       }
     } catch (error: any) {
       console.error('Error consultando estadias por area:', error)
@@ -77,9 +77,10 @@ export function useAreaStays() {
     isLoading,
     report,
     errorMessage,
-    selectedZone,
-    zoneOptions,
+    selectedField,
+    fieldOptions,
     rows,
     fetchAreaStays
   }
 }
+

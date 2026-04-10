@@ -36,8 +36,7 @@
       "when": 1775449457320,
       "tag": "0004_far_cassandra_nova",
       "breakpoints": true
-    }
-    ,
+    },
     {
       "idx": 5,
       "version": "7",
@@ -50,6 +49,27 @@
       "version": "7",
       "when": 1778260000000,
       "tag": "0006_add_inventory_parts",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1779000000000,
+      "tag": "0007_add_field_color",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1775687086388,
+      "tag": "0008_wet_puck",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1776000000000,
+      "tag": "0009_add_field_tipo",
       "breakpoints": true
     }
   ]
